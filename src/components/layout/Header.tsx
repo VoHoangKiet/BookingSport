@@ -2,11 +2,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
 import { Button } from '@/components/ui';
 import { ROUTES } from '@/lib/constants';
-import { Home, Search, Calendar, User, LogOut } from 'lucide-react';
+import { Home, Search, Calendar, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { useMemo } from 'react';
+import { decodeToken } from '@/admin/src/utils/jwt';
 
 export function Header() {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout, accessToken } = useAuthStore();
   const navigate = useNavigate();
+
+  // const loaiTaiKhoan = user?.loai_tai_khoan;
+  const loaiTaiKhoan: string | undefined = useMemo(() => {
+    try {
+      return decodeToken(typeof accessToken === "string" ? accessToken : "")?.loai_tai_khoan
+    } catch (error) {
+      console.log(error)
+    }
+  }, [accessToken])
+
 
   const handleLogout = () => {
     logout();
@@ -27,29 +39,40 @@ export function Header() {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link 
-              to={ROUTES.HOME} 
+            <Link
+              to={ROUTES.HOME}
               className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 transition-colors font-medium"
             >
               <Home className="w-4 h-4" />
               Trang chủ
             </Link>
-            <Link 
-              to={ROUTES.COURTS} 
+            <Link
+              to={ROUTES.COURTS}
               className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 transition-colors font-medium"
             >
               <Search className="w-4 h-4" />
               Tìm sân
             </Link>
             {isAuthenticated && (
-              <Link 
-                to={ROUTES.BOOKINGS} 
+              <Link
+                to={ROUTES.BOOKINGS}
                 className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 transition-colors font-medium"
               >
                 <Calendar className="w-4 h-4" />
                 Lịch đặt
               </Link>
             )}
+            {isAuthenticated && loaiTaiKhoan &&
+              (loaiTaiKhoan === "admin" || loaiTaiKhoan === "chu_san") && (
+                <Link
+                  to={loaiTaiKhoan === "admin" ? "/admin" : "/owner"}
+                  className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 transition-colors font-medium"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Quản lý
+                </Link>
+              )}
+
           </nav>
 
           {/* Auth buttons */}
