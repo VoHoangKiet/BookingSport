@@ -10,6 +10,11 @@ export default function AuthSuccess() {
   useEffect(() => {
     const token = params.get("token");
 
+    if (!token) {
+      console.error("Token không tìm thấy trên URL");
+      navigate("/login");
+      return; 
+    }
     try {
       saveToken(token);
       
