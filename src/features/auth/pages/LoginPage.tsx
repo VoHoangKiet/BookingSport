@@ -20,7 +20,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setAuth } = useAuthStore();
+  const { setToken } = useAuthStore();
   const [error, setError] = useState('');
 
   const from = location.state?.from?.pathname || ROUTES.HOME;
@@ -36,8 +36,12 @@ export default function LoginPage() {
   const loginMutation = useMutation({
     mutationFn: authApi.login,
     onSuccess: (data) => {
-      setAuth(data.user, data.access_token, data.refresh_token);
-      navigate(from, { replace: true });
+      if (data.success && data.token) {
+        setToken(data.token);
+        navigate(from, { replace: true });
+      } else {
+        setError('Đăng nhập thất bại');
+      }
     },
     onError: () => {
       setError('Email hoặc mật khẩu không đúng');

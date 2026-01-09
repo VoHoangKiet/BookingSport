@@ -19,12 +19,22 @@ export const courtsApi = {
 
   getById: async (id: number): Promise<Court> => {
     const response = await api.get(`/api/courts/${id}`);
-    return response.data.data;
+    const data = response.data.data;
+    if (data.san && data.subCourts) {
+      return {
+        ...data.san,
+        san_cons: data.subCourts.map((sub: Record<string, unknown>) => ({
+          ...sub,
+          gia_co_ban: parseFloat(String(sub.gia_co_ban)) || 0,
+        })),
+      };
+    }
+    return data;
   },
 
   getImages: async (id: number): Promise<string[]> => {
     const response = await api.get(`/api/courts/${id}/images`);
-    return response.data.data;
+    return response.data.images || [];
   },
 
   getSubCourts: async (courtId: number): Promise<SubCourt[]> => {

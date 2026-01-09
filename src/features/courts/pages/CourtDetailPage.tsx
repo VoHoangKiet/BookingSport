@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { courtsApi } from '@/api';
@@ -10,6 +11,7 @@ export default function CourtDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const { data: court, isLoading } = useQuery({
     queryKey: ['court', id],
@@ -72,10 +74,17 @@ export default function CourtDetailPage() {
           <div className="lg:col-span-2">
             {/* Images */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-              <div className="relative h-80 md:h-96 bg-gray-200">
-                {court.hinh_anh || (images && images.length > 0) ? (
+              <div className="relative h-80 md:h-[450px] bg-gray-100">
+                {images && images.length > 0 ? (
                   <img
-                    src={images?.[0] || court.hinh_anh}
+                    key={activeImageIndex}
+                    src={images[activeImageIndex]}
+                    alt={court.ten_san}
+                    className="w-full h-full object-cover animate-fade-in"
+                  />
+                ) : court.anh_san ? (
+                  <img
+                    src={court.anh_san}
                     alt={court.ten_san}
                     className="w-full h-full object-cover"
                   />
@@ -87,14 +96,25 @@ export default function CourtDetailPage() {
               </div>
 
               {images && images.length > 1 && (
-                <div className="p-4 flex gap-2 overflow-x-auto">
+                <div className="p-4 flex gap-3 overflow-x-auto scrollbar-hide bg-gray-50/50">
                   {images.map((img, idx) => (
-                    <img
+                    <button
                       key={idx}
-                      src={img}
-                      alt={`${court.ten_san} ${idx + 1}`}
-                      className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                    />
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 group ${
+                        activeImageIndex === idx
+                          ? 'border-emerald-500 ring-2 ring-emerald-500/20 scale-95'
+                          : 'border-transparent hover:border-gray-300'
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`${court.ten_san} ${idx + 1}`}
+                        className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 ${
+                          activeImageIndex === idx ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+                        }`}
+                      />
+                    </button>
                   ))}
                 </div>
               )}
@@ -156,15 +176,17 @@ export default function CourtDetailPage() {
                 )}
               </div>
 
-              <div className="border-t pt-4 mb-6">
-                <span className="text-sm text-gray-500">Giá từ</span>
-                <p className="text-3xl font-bold text-emerald-600">
-                  {formatCurrency(
-                    court.san_cons?.reduce((min, sub) => Math.min(min, sub.gia_co_ban), Infinity) || 0
-                  )}
-                  <span className="text-base font-normal text-gray-500">/giờ</span>
-                </p>
-              </div>
+              {court.san_cons && court.san_cons.length > 0 && (
+                <div className="border-t pt-4 mb-6">
+                  <span className="text-sm text-gray-500">Giá từ</span>
+                  <p className="text-3xl font-bold text-emerald-600">
+                    {formatCurrency(
+                      court.san_cons.reduce((min, sub) => Math.min(min, sub.gia_co_ban), Infinity)
+                    )}
+                    <span className="text-base font-normal text-gray-500">/giờ</span>
+                  </p>
+                </div>
+              )}
 
               <Button className="w-full" size="lg" onClick={handleBooking}>
                 Đặt sân ngay

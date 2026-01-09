@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { courtsApi, bookingsApi, paymentApi } from '@/api';
 import { Button, Card, CardBody, Skeleton, Badge } from '@/components/ui';
 import { formatCurrency, formatTime } from '@/lib/utils';
-import type { TimeSlot, PaymentMethod } from '@/types';
+import type { TimeSlot, PaymentMethod, SubCourt } from '@/types';
 import { Frown, ChevronLeft } from 'lucide-react';
 
 export default function BookingPage() {
@@ -26,11 +26,15 @@ export default function BookingPage() {
     enabled: !!id,
   });
 
-  const { data: availableSlots, isLoading: slotsLoading } = useQuery({
+  const { data: availableSubCourts, isLoading: slotsLoading } = useQuery({
     queryKey: ['available-slots', id, selectedDate],
     queryFn: () => bookingsApi.getAvailableSlots(Number(id), selectedDate),
     enabled: !!id && !!selectedDate,
   });
+
+  // Get the selected sub-court with its available slots
+  const currentSubCourt = availableSubCourts?.find((s) => s.ma_san_con === selectedSubCourt);
+  const currentSlots = currentSubCourt?.available_slots || [];
 
   const createBookingMutation = useMutation({
     mutationFn: bookingsApi.create,
@@ -57,13 +61,11 @@ export default function BookingPage() {
   };
 
   const calculateTotal = () => {
-    if (!court || !selectedSubCourt || !availableSlots) return 0;
-    const subCourt = court.san_cons?.find((s) => s.ma_san_con === selectedSubCourt);
-    if (!subCourt) return 0;
+    if (!currentSubCourt || !currentSlots.length) return 0;
 
     return selectedSlots.reduce((total, slotId) => {
-      const slot = availableSlots.find((s) => s.ma_khung_gio === slotId);
-      return total + subCourt.gia_co_ban + (slot?.phu_phi || 0);
+      const slot = currentSlots.find((s) => s.ma_khung_gio === slotId);
+      return total + currentSubCourt.gia_co_ban + (slot?.phu_phi || 0);
     }, 0);
   };
 
@@ -139,25 +141,38 @@ export default function BookingPage() {
             <Card>
               <CardBody>
                 <h2 className="font-semibold text-lg mb-4">Chọn sân con</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {court.san_cons?.map((sub) => (
-                    <button
-                      key={sub.ma_san_con}
-                      onClick={() => {
-                        setSelectedSubCourt(sub.ma_san_con);
-                        setSelectedSlots([]);
-                      }}
-                      className={`p-4 rounded-lg border-2 text-left transition-all ${
-                        selectedSubCourt === sub.ma_san_con
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <span className="font-medium block">{sub.ten_san_con}</span>
-                      <span className="text-sm text-emerald-600">{formatCurrency(sub.gia_co_ban)}/giờ</span>
-                    </button>
-                  ))}
-                </div>
+                {slotsLoading ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {[1, 2].map((i) => (
+                      <Skeleton key={i} className="h-20 rounded-lg" />
+                    ))}
+                  </div>
+                ) : availableSubCourts && availableSubCourts.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {availableSubCourts.map((sub: SubCourt) => (
+                      <button
+                        key={sub.ma_san_con}
+                        onClick={() => {
+                          setSelectedSubCourt(sub.ma_san_con);
+                          setSelectedSlots([]);
+                        }}
+                        className={`p-4 rounded-lg border-2 text-left transition-all ${
+                          selectedSubCourt === sub.ma_san_con
+                            ? 'border-emerald-500 bg-emerald-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <span className="font-medium block">{sub.ten_san_con}</span>
+                        <span className="text-sm text-emerald-600">{formatCurrency(sub.gia_co_ban)}/giờ</span>
+                        <span className="text-xs text-gray-500 block mt-1">
+                          {sub.available_slots?.length || 0} khung giờ trống
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">Không có sân con nào</p>
+                )}
               </CardBody>
             </Card>
 
@@ -165,20 +180,16 @@ export default function BookingPage() {
             <Card>
               <CardBody>
                 <h2 className="font-semibold text-lg mb-4">Chọn khung giờ</h2>
-                {slotsLoading ? (
-                  <div className="grid grid-cols-4 gap-2">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                      <Skeleton key={i} className="h-12 rounded-lg" />
-                    ))}
-                  </div>
-                ) : availableSlots && availableSlots.length > 0 ? (
+                {!selectedSubCourt ? (
+                  <p className="text-gray-500 text-center py-4">Vui lòng chọn sân con trước</p>
+                ) : currentSlots.length > 0 ? (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {availableSlots.map((slot: TimeSlot) => (
+                    {currentSlots.map((slot: TimeSlot) => (
                       <button
                         key={slot.ma_khung_gio}
                         onClick={() => handleSlotToggle(slot.ma_khung_gio)}
                         disabled={slot.da_dat}
-                        className={`p-3 rounded-lg border-2 text-sm transition-all ${
+                        className={`p-3 rounded-lg border-2 text-sm transition-all min-h-[70px] flex flex-col justify-center items-center ${
                           slot.da_dat
                             ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
                             : selectedSlots.includes(slot.ma_khung_gio)
@@ -186,17 +197,17 @@ export default function BookingPage() {
                             : 'border-gray-200 hover:border-emerald-300'
                         }`}
                       >
-                        <span className="block font-medium">
+                        <span className="font-medium whitespace-nowrap">
                           {formatTime(slot.gio_bat_dau)} - {formatTime(slot.gio_ket_thuc)}
                         </span>
-                        {slot.phu_phi > 0 && !slot.da_dat && (
-                          <span className="text-xs opacity-75">+{formatCurrency(slot.phu_phi)}</span>
-                        )}
+                        <span className={`text-xs mt-0.5 ${slot.phu_phi > 0 && !slot.da_dat ? 'opacity-75' : 'invisible'}`}>
+                          +{formatCurrency(slot.phu_phi || 0)}
+                        </span>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-4">Không có khung giờ nào</p>
+                  <p className="text-gray-500 text-center py-4">Không có khung giờ trống</p>
                 )}
               </CardBody>
             </Card>
@@ -258,11 +269,11 @@ export default function BookingPage() {
                     <span className="text-gray-500">Ngày:</span>
                     <span className="font-medium">{new Date(selectedDate).toLocaleDateString('vi-VN')}</span>
                   </div>
-                  {selectedSubCourt && (
+                  {selectedSubCourt && currentSubCourt && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">Sân con:</span>
                       <span className="font-medium">
-                        {court.san_cons?.find((s) => s.ma_san_con === selectedSubCourt)?.ten_san_con}
+                        {currentSubCourt.ten_san_con}
                       </span>
                     </div>
                   )}
@@ -271,7 +282,7 @@ export default function BookingPage() {
                       <span className="text-gray-500 block mb-2">Khung giờ:</span>
                       <div className="flex flex-wrap gap-1">
                         {selectedSlots.map((slotId) => {
-                          const slot = availableSlots?.find((s) => s.ma_khung_gio === slotId);
+                          const slot = currentSlots.find((s) => s.ma_khung_gio === slotId);
                           return slot ? (
                             <Badge key={slotId} variant="success">
                               {formatTime(slot.gio_bat_dau)}

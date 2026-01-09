@@ -18,9 +18,9 @@ export function CourtCard({ court }: CourtCardProps) {
       <Card hoverable className="overflow-hidden h-full">
         {/* Image */}
         <div className="relative h-48 bg-gray-200">
-          {court.hinh_anh ? (
+          {court.anh_san ? (
             <img
-              src={court.hinh_anh}
+              src={court.anh_san}
               alt={court.ten_san}
               className="w-full h-full object-cover"
             />
@@ -50,11 +50,19 @@ export function CourtCard({ court }: CourtCardProps) {
 
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs text-gray-500">Từ</span>
-              <p className="text-lg font-bold text-emerald-600">
-                {formatCurrency(minPrice)}
-                <span className="text-sm font-normal text-gray-500">/giờ</span>
-              </p>
+              {minPrice && minPrice !== Infinity ? (
+                <>
+                  <span className="text-xs text-gray-500">Từ</span>
+                  <p className="text-lg font-bold text-emerald-600">
+                    {formatCurrency(minPrice)}
+                    <span className="text-sm font-normal text-gray-500">/giờ</span>
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm font-medium text-emerald-600">
+                  Xem chi tiết giá
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-1 text-sm text-gray-500">
               <Clock className="w-4 h-4" />
