@@ -24,7 +24,7 @@ export const courtsApi = {
 
   getImages: async (id: number): Promise<string[]> => {
     const response = await api.get(`/api/courts/${id}/images`);
-    return response.data.data;
+    return response.data.images;
   },
 
   getSubCourts: async (courtId: number): Promise<SubCourt[]> => {

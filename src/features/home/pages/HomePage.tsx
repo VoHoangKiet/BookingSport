@@ -4,25 +4,31 @@ import { ROUTES } from '@/lib/constants';
 import { useQuery } from '@tanstack/react-query';
 import { courtsApi, sportsApi } from '@/api';
 import { CourtCard } from '@/features/courts/components/CourtCard';
-import { 
-  Search, 
-  UserPlus, 
+import BadmintonIcon from '@/assets/badminton-icon.png';
+import TableTennis from '@/assets/tabletennis-icon.png';
+import Tennis from '@/assets/tennis-icon.png';
+import FootballIcon from '@/assets/football-icon.png'
+import {
+  Search,
+  UserPlus,
   ArrowRight,
   CreditCard,
   Smartphone,
   Dribbble,
-  Trophy,
-  Target,
+  Disc,
   Volleyball
 } from 'lucide-react';
 
 // Sport icon mapping
 const sportIcons: Record<string, React.ReactNode> = {
-  default: <Dribbble className="w-8 h-8" />,
-  'Bóng đá': <Dribbble className="w-8 h-8" />,
-  'Bóng rổ': <Trophy className="w-8 h-8" />,
-  'Tennis': <Target className="w-8 h-8" />,
-  'Cầu lông': <Volleyball className="w-8 h-8" />,
+  default: <img src={FootballIcon} className='w-8' />,
+  'Bóng đá': <img src={FootballIcon} className='w-8'/>,
+  'Bóng rổ': <Dribbble className="w-8 h-8" />,
+  'Tennis': <img src={Tennis} className='w-8' />,
+  // 'Cầu lông': <Feather className="w-8 h-8" />,
+  'Cầu lông': <img src={BadmintonIcon} className='w-8' />,
+  'Bóng bàn': <img src={TableTennis} className='w-8' />,
+  'Pickleball': <Disc className="w-8 h-8" />,
   'Bóng chuyền': <Volleyball className="w-8 h-8" />,
 };
 
@@ -50,7 +56,7 @@ export default function HomePage() {
               <span className="text-emerald-200">Nhanh chóng & Dễ dàng</span>
             </h1>
             <p className="text-lg md:text-xl text-emerald-100 mb-8 max-w-2xl mx-auto">
-              Tìm và đặt sân thể thao yêu thích của bạn chỉ trong vài bước đơn giản. 
+              Tìm và đặt sân thể thao yêu thích của bạn chỉ trong vài bước đơn giản.
               Thanh toán trực tuyến an toàn với VNPay.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -73,7 +79,7 @@ export default function HomePage() {
         {/* Wave decoration */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#F9FAFB"/>
+            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#F9FAFB" />
           </svg>
         </div>
       </section>

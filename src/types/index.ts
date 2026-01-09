@@ -23,7 +23,8 @@ export interface Court {
   mo_ta?: string;
   gio_mo_cua: string;
   gio_dong_cua: string;
-  hinh_anh?: string;
+  // hinh_anh?: string;
+  anh_san?: string;
   bo_mon?: Sport;
   san_cons?: SubCourt[];
   chu_san?: User;

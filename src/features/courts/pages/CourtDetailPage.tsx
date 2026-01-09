@@ -13,15 +13,20 @@ export default function CourtDetailPage() {
 
   const { data: court, isLoading } = useQuery({
     queryKey: ['court', id],
-    queryFn: () => courtsApi.getById(Number(id)),
+    queryFn: () => courtsApi.getById(Number(id)) as Promise<any>,
     enabled: !!id,
   });
+
+  console.log({ court })
 
   const { data: images } = useQuery({
     queryKey: ['court', id, 'images'],
     queryFn: () => courtsApi.getImages(Number(id)),
     enabled: !!id,
   });
+
+  console.log({ images })
+
 
   const handleBooking = () => {
     if (!isAuthenticated) {
@@ -73,9 +78,9 @@ export default function CourtDetailPage() {
             {/* Images */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
               <div className="relative h-80 md:h-96 bg-gray-200">
-                {court.hinh_anh || (images && images.length > 0) ? (
+                {court.anh_san || (images && images.length > 0) ? (
                   <img
-                    src={images?.[0] || court.hinh_anh}
+                    src={images?.[0] || court.anh_san}
                     alt={court.ten_san}
                     className="w-full h-full object-cover"
                   />
@@ -101,17 +106,17 @@ export default function CourtDetailPage() {
             </div>
 
             {/* Description */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+            {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
               <h2 className="text-xl font-semibold mb-4">Mô tả</h2>
-              <p className="text-gray-600">{court.mo_ta || 'Chưa có mô tả'}</p>
-            </div>
+              <p className="text-gray-600">{court.san.ten_san || 'Chưa có mô tả'}</p>
+            </div> */}
 
             {/* Sub courts */}
             {court.san_cons && court.san_cons.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h2 className="text-xl font-semibold mb-4">Danh sách sân con</h2>
                 <div className="space-y-3">
-                  {court.san_cons.map((sub) => (
+                  {court.san_cons.map((sub: any) => (
                     <div
                       key={sub.ma_san_con}
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
@@ -134,19 +139,21 @@ export default function CourtDetailPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-24">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">{court.ten_san}</h1>
-              
+
               {court.bo_mon && (
                 <Badge variant="success" className="mb-4">{court.bo_mon.ten_bo_mon}</Badge>
               )}
 
               <div className="space-y-3 mb-6">
+                <p className="text-gray-600">{court.san.ten_san}</p>
                 <div className="flex items-start gap-2 text-gray-600">
-                  <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5 text-emerald-500" />
-                  <span>{court.dia_chi}</span>
+                  <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5 text-emerald-500" /> Địa chỉ: 
+                  <span>{court.san.dia_chi}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <Clock className="w-5 h-5 text-emerald-500" />
-                  <span>{court.gio_mo_cua?.slice(0, 5)} - {court.gio_dong_cua?.slice(0, 5)}</span>
+                  {/* <span>{court.gio_mo_cua?.slice(0, 5)} - {court.gio_dong_cua?.slice(0, 5)}</span> */}
+                  Thời gian: 6h00 - 22h00
                 </div>
                 {court.san_cons && court.san_cons.length > 0 && (
                   <div className="flex items-center gap-2 text-gray-600">
@@ -156,7 +163,7 @@ export default function CourtDetailPage() {
                 )}
               </div>
 
-              <div className="border-t pt-4 mb-6">
+              {/* <div className="border-t pt-4 mb-6">
                 <span className="text-sm text-gray-500">Giá từ</span>
                 <p className="text-3xl font-bold text-emerald-600">
                   {formatCurrency(
@@ -164,7 +171,7 @@ export default function CourtDetailPage() {
                   )}
                   <span className="text-base font-normal text-gray-500">/giờ</span>
                 </p>
-              </div>
+              </div> */}
 
               <Button className="w-full" size="lg" onClick={handleBooking}>
                 Đặt sân ngay

@@ -18,9 +18,9 @@ export function CourtCard({ court }: CourtCardProps) {
       <Card hoverable className="overflow-hidden h-full">
         {/* Image */}
         <div className="relative h-48 bg-gray-200">
-          {court.hinh_anh ? (
+          {court.anh_san ? (
             <img
-              src={court.hinh_anh}
+              src={court.anh_san}
               alt={court.ten_san}
               className="w-full h-full object-cover"
             />

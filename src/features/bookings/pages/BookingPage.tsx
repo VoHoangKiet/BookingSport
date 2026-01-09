@@ -1,16 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { courtsApi, bookingsApi, paymentApi } from '@/api';
 import { Button, Card, CardBody, Skeleton, Badge } from '@/components/ui';
 import { formatCurrency, formatTime } from '@/lib/utils';
-import type { TimeSlot, PaymentMethod } from '@/types';
+import type { TimeSlot, PaymentMethod, SubCourt } from '@/types';
 import { Frown, ChevronLeft } from 'lucide-react';
+import useSWR from 'swr';
+import { number } from 'zod';
+
+type SelectedSlot = {
+  subCourt: SubCourt,
+  timeSlot: TimeSlot
+}
 
 export default function BookingPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const [selectedDate, setSelectedDate] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -19,12 +26,15 @@ export default function BookingPage() {
   const [selectedSubCourt, setSelectedSubCourt] = useState<number | null>(null);
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('chuyen_khoan');
+  const [selectedSlotsV2, setSelectedSlotsV2] = useState<Array<SelectedSlot>>([])
 
   const { data: court, isLoading: courtLoading } = useQuery({
     queryKey: ['court', id],
     queryFn: () => courtsApi.getById(Number(id)),
     enabled: !!id,
   });
+
+  const { data: timeSlotes } = useSWR(import.meta.env.VITE_API_BASE_URL + '/api/configs/time-slots')
 
   const { data: availableSlots, isLoading: slotsLoading } = useQuery({
     queryKey: ['available-slots', id, selectedDate],
@@ -56,6 +66,30 @@ export default function BookingPage() {
     );
   };
 
+  const handleToggleSlot = (subCourt: SubCourt, slot: TimeSlot) => {
+    const slotIndex = selectedSlotsV2.findIndex(item => item.timeSlot.ma_khung_gio == slot.ma_khung_gio && item.subCourt.ma_san_con == subCourt.ma_san_con)
+    if (slotIndex !== -1) {
+      setSelectedSlotsV2(prev => prev.filter((_item, index) => index !== slotIndex))
+    } else {
+      setSelectedSlotsV2(prev => [...prev, { subCourt, timeSlot: slot }])
+    }
+  }
+
+  const priceBySubCourts: { [key: string]: number } = useMemo(() => {
+    const prices: { [key: string]: number } = {}
+    selectedSlotsV2.map((item) => {
+      prices[String(item.subCourt.ma_san_con)] = (prices[String(item.subCourt.ma_san_con)] || 0) + (Number(item.subCourt?.gia_co_ban) || 0) + (Number(item.timeSlot?.phu_phi) || 0)
+    })
+    return prices
+  }, [selectedSlotsV2])
+
+  const totalPrice = useMemo(() => {
+    return Object.values(priceBySubCourts).reduce((sum: number, price: number) => {
+      return sum + price
+    }, 0)
+  }, [priceBySubCourts])
+
+
   const calculateTotal = () => {
     if (!court || !selectedSubCourt || !availableSlots) return 0;
     const subCourt = court.san_cons?.find((s) => s.ma_san_con === selectedSubCourt);
@@ -68,14 +102,29 @@ export default function BookingPage() {
   };
 
   const handleSubmit = () => {
+    /**
     if (!selectedSubCourt || selectedSlots.length === 0) return;
-    
+
     createBookingMutation.mutate({
       ma_san_con: selectedSubCourt,
       ngay_dat_san: selectedDate,
       khung_gios: selectedSlots,
       hinh_thuc_thanh_toan: paymentMethod,
     });
+     */
+    for (const [subCourtId, price] of Object.entries(priceBySubCourts)) {
+      // console.log({ subCourtId, price })
+      const payload = {
+        ma_san_con: Number(subCourtId),
+        ngay_dat_san: selectedDate,
+        khung_gios: selectedSlotsV2
+          .filter(item => item.subCourt.ma_san_con == Number(subCourtId))
+          .map(item => item.timeSlot.ma_khung_gio),
+        hinh_thuc_thanh_toan: paymentMethod,
+      }
+      console.log(payload)
+      // createBookingMutation.mutate();
+    }
   };
 
   if (courtLoading) {
@@ -136,6 +185,54 @@ export default function BookingPage() {
             </Card>
 
             {/* Sub-court selector */}
+            {/* <span>{JSON.stringify(court)}</span> */}
+            {
+              Array.isArray(timeSlotes?.data) &&
+              <Card>
+                <CardBody>
+                  <div>
+                    {/* @ts-ignore */}
+                    {court?.subCourts?.map((subCourt, idx) => {
+                      return <div className='flex gap-2 mt-2 items-end' key={idx}>
+                        <span className='min-w-max'>{subCourt.ten_san_con}</span>
+                        <div className='flex gap-2'>
+                          {
+                            timeSlotes.data.map(((slot: TimeSlot, slotIndex: number) => {
+                              const isActive: boolean = selectedSlotsV2.some(item => item.timeSlot.ma_khung_gio == slot.ma_khung_gio && subCourt.ma_san_con == item.subCourt.ma_san_con)
+                              return (
+                                <div key={slot.ma_khung_gio}>
+                                  {
+                                    idx === 0 && <div className='relative h-[2em]'>
+                                      <p className='absolute left-[-50%]'>{slot.gio_bat_dau.slice(0, slot.gio_bat_dau?.lastIndexOf(':'))}
+                                        {(slotIndex + 1 === timeSlotes?.data?.length) && <span className='ml-2'>{slot.gio_ket_thuc.slice(0, slot.gio_ket_thuc?.lastIndexOf(':'))}</span>}
+                                      </p>
+                                    </div>
+                                  }
+                                  <div
+                                    // onClick={() => alert(JSON.stringify([subCourt.ma_san_con, slot.ma_khung_gio]))}
+                                    onClick={() => handleToggleSlot(subCourt, slot)}
+                                    className='h-8 w-[3em] border-gray-300 cursor-pointer'
+                                    style={{ backgroundColor: isActive ? 'mediumseagreen' : '#DCDBDB' }}
+                                  ></div>
+                                </div>
+                              )
+                            }))
+                          }
+                        </div>
+                      </div>
+                    })}
+                  </div>
+                </CardBody>
+              </Card>
+
+            }
+            {/* <div>
+              {
+                JSON.stringify(court, null, 2)
+              }
+            </div> */}
+
+
             <Card>
               <CardBody>
                 <h2 className="font-semibold text-lg mb-4">Chọn sân con</h2>
@@ -147,11 +244,10 @@ export default function BookingPage() {
                         setSelectedSubCourt(sub.ma_san_con);
                         setSelectedSlots([]);
                       }}
-                      className={`p-4 rounded-lg border-2 text-left transition-all ${
-                        selectedSubCourt === sub.ma_san_con
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`p-4 rounded-lg border-2 text-left transition-all ${selectedSubCourt === sub.ma_san_con
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
                       <span className="font-medium block">{sub.ten_san_con}</span>
                       <span className="text-sm text-emerald-600">{formatCurrency(sub.gia_co_ban)}/giờ</span>
@@ -178,13 +274,12 @@ export default function BookingPage() {
                         key={slot.ma_khung_gio}
                         onClick={() => handleSlotToggle(slot.ma_khung_gio)}
                         disabled={slot.da_dat}
-                        className={`p-3 rounded-lg border-2 text-sm transition-all ${
-                          slot.da_dat
-                            ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                            : selectedSlots.includes(slot.ma_khung_gio)
+                        className={`p-3 rounded-lg border-2 text-sm transition-all ${slot.da_dat
+                          ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                          : selectedSlots.includes(slot.ma_khung_gio)
                             ? 'border-emerald-500 bg-emerald-500 text-white'
                             : 'border-gray-200 hover:border-emerald-300'
-                        }`}
+                          }`}
                       >
                         <span className="block font-medium">
                           {formatTime(slot.gio_bat_dau)} - {formatTime(slot.gio_ket_thuc)}
@@ -206,9 +301,8 @@ export default function BookingPage() {
               <CardBody>
                 <h2 className="font-semibold text-lg mb-4">Phương thức thanh toán</h2>
                 <div className="space-y-3">
-                  <label className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    paymentMethod === 'chuyen_khoan' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'
-                  }`}>
+                  <label className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${paymentMethod === 'chuyen_khoan' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'
+                    }`}>
                     <input
                       type="radio"
                       name="payment"
@@ -222,9 +316,8 @@ export default function BookingPage() {
                       <span className="text-sm text-gray-500">Thanh toán ngay qua cổng VNPay</span>
                     </div>
                   </label>
-                  <label className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    paymentMethod === 'tien_mat' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'
-                  }`}>
+                  <label className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${paymentMethod === 'tien_mat' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200'
+                    }`}>
                     <input
                       type="radio"
                       name="payment"
@@ -248,7 +341,7 @@ export default function BookingPage() {
             <Card className="sticky top-24">
               <CardBody>
                 <h2 className="font-semibold text-lg mb-4">Tóm tắt đơn đặt</h2>
-                
+
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Sân:</span>
@@ -287,7 +380,8 @@ export default function BookingPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-700">Tổng tiền:</span>
                     <span className="text-2xl font-bold text-emerald-600">
-                      {formatCurrency(calculateTotal())}
+                      {/* {formatCurrency(calculateTotal())} */}
+                      {formatCurrency(totalPrice)}
                     </span>
                   </div>
                 </div>
@@ -295,7 +389,8 @@ export default function BookingPage() {
                 <Button
                   className="w-full"
                   size="lg"
-                  disabled={!selectedSubCourt || selectedSlots.length === 0}
+                  // disabled={!selectedSubCourt || selectedSlots.length === 0}
+                  disabled={!selectedSlotsV2.length}
                   isLoading={createBookingMutation.isPending}
                   onClick={handleSubmit}
                 >
