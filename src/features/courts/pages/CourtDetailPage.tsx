@@ -5,6 +5,7 @@ import { courtsApi } from '@/api';
 import { Button, Badge, Skeleton } from '@/components/ui';
 import { formatCurrency } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth.store';
+import type { SubCourt } from '@/types';
 import { MapPin, Clock, Dribbble, Frown, ChevronRight } from 'lucide-react';
 
 export default function CourtDetailPage() {
@@ -63,18 +64,18 @@ export default function CourtDetailPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
-        <nav className="mb-6 text-sm flex items-center gap-2">
+        <nav className="mb-6 text-xs font-semibold flex items-center gap-2">
           <Link to="/courts" className="text-emerald-600 hover:text-emerald-700">Tìm sân</Link>
-          <ChevronRight className="w-4 h-4 text-gray-400" />
-          <span className="text-gray-600">{court.ten_san}</span>
+          <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+          <span className="text-gray-500 font-medium">{court.ten_san}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content */}
           <div className="lg:col-span-2">
             {/* Images */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-              <div className="relative h-80 md:h-[450px] bg-gray-100">
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+              <div className="relative h-80 md:h-[450px] bg-gray-50">
                 {images && images.length > 0 ? (
                   <img
                     key={activeImageIndex}
@@ -89,8 +90,8 @@ export default function CourtDetailPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-teal-100">
-                    <Dribbble className="w-24 h-24 text-emerald-300" />
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <Dribbble className="w-16 h-16 text-gray-200" />
                   </div>
                 )}
               </div>
@@ -101,7 +102,7 @@ export default function CourtDetailPage() {
                     <button
                       key={idx}
                       onClick={() => setActiveImageIndex(idx)}
-                      className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 group ${
+                      className={`relative flex-shrink-0 w-20 h-20 rounded border-2 transition-all duration-200 group ${
                         activeImageIndex === idx
                           ? 'border-emerald-500 ring-2 ring-emerald-500/20 scale-95'
                           : 'border-transparent hover:border-gray-300'
@@ -121,28 +122,36 @@ export default function CourtDetailPage() {
             </div>
 
             {/* Description */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">Mô tả</h2>
-              <p className="text-gray-600">{court.mo_ta || 'Chưa có mô tả'}</p>
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+               <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center gap-2">
+                <div className="w-1 h-3.5 bg-emerald-600 rounded-full"></div>
+                <h2 className="text-sm font-bold text-gray-800">Mô tả chi tiết</h2>
+              </div>
+              <div className="p-6">
+                <p className="text-base text-gray-600 leading-relaxed font-normal">{court.mo_ta || 'Chưa có thông tin mô tả cụ thể cho sân này.'}</p>
+              </div>
             </div>
 
             {/* Sub courts */}
             {court.san_cons && court.san_cons.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-xl font-semibold mb-4">Danh sách sân con</h2>
-                <div className="space-y-3">
-                  {court.san_cons.map((sub) => (
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center gap-2">
+                  <div className="w-1 h-3.5 bg-emerald-600 rounded-full"></div>
+                  <h2 className="text-sm font-bold text-gray-800">Thông tin khu vực sân ({court.san_cons.length})</h2>
+                </div>
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {court.san_cons?.map((sub: SubCourt) => (
                     <div
                       key={sub.ma_san_con}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                      className="flex flex-col p-4 bg-white border border-gray-100 rounded hover:border-emerald-200 transition-colors group"
                     >
-                      <div>
-                        <h3 className="font-medium text-gray-900">{sub.ten_san_con}</h3>
-                        {sub.mo_ta && <p className="text-sm text-gray-500">{sub.mo_ta}</p>}
+                      <h3 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">{sub.ten_san_con}</h3>
+                      <div className="flex justify-between items-end mt-2">
+                        <span className="text-xs text-gray-500 font-medium">{sub.mo_ta || 'Sân tiêu chuẩn'}</span>
+                        <span className="text-lg font-bold text-emerald-600">
+                          {formatCurrency(sub.gia_co_ban)}<span className="text-xs font-normal text-gray-400">/h</span>
+                        </span>
                       </div>
-                      <span className="font-semibold text-emerald-600">
-                        {formatCurrency(sub.gia_co_ban)}/giờ
-                      </span>
                     </div>
                   ))}
                 </div>
@@ -152,45 +161,56 @@ export default function CourtDetailPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-24">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{court.ten_san}</h1>
-              
-              {court.bo_mon && (
-                <Badge variant="success" className="mb-4">{court.bo_mon.ten_bo_mon}</Badge>
-              )}
-
-              <div className="space-y-3 mb-6">
-                <div className="flex items-start gap-2 text-gray-600">
-                  <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5 text-emerald-500" />
-                  <span>{court.dia_chi}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Clock className="w-5 h-5 text-emerald-500" />
-                  <span>{court.gio_mo_cua?.slice(0, 5)} - {court.gio_dong_cua?.slice(0, 5)}</span>
-                </div>
-                {court.san_cons && court.san_cons.length > 0 && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Dribbble className="w-5 h-5 text-emerald-500" />
-                    <span>{court.san_cons.length} sân con</span>
-                  </div>
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden sticky top-24">
+              <div className="p-6">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">{court.ten_san}</h1>
+                
+                {court.bo_mon && (
+                  <Badge className="bg-emerald-600 text-white border-emerald-600 text-xs font-semibold mb-6 rounded">
+                    {court.bo_mon.ten_bo_mon}
+                  </Badge>
                 )}
+
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5 text-emerald-600" />
+                    <span className="text-sm text-gray-600 leading-snug">{court.dia_chi}</span>
+                  </div>
+                  {/* <div className="flex items-center gap-3">
+                    <Clock className="w-5 h-5 text-emerald-600" />
+                    <span className="text-sm text-gray-800 font-semibold">
+                      Mở cửa: {court.gio_mo_cua?.slice(0, 5)} — {court.gio_dong_cua?.slice(0, 5)}
+                    </span>
+                  </div> */}
+                  {court.san_cons && court.san_cons.length > 0 && (
+                    <div className="flex items-center gap-3">
+                      <Dribbble className="w-5 h-5 text-emerald-600" />
+                      <span className="text-sm text-gray-600">{court.san_cons.length} khu vực thi đấu</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-gray-100 pt-6 mb-6">
+                  <span className="text-xs font-semibold text-gray-500 block mb-1">Giá thuê từ</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold text-emerald-600">
+                      {formatCurrency(
+                        court.san_cons?.reduce((min: number, sub: SubCourt) => Math.min(min, sub.gia_co_ban), Infinity) || 0
+                      )}
+                    </span>
+                    <span className="text-sm font-medium text-gray-500">/giờ</span>
+                  </div>
+                </div>
               </div>
 
-              {court.san_cons && court.san_cons.length > 0 && (
-                <div className="border-t pt-4 mb-6">
-                  <span className="text-sm text-gray-500">Giá từ</span>
-                  <p className="text-3xl font-bold text-emerald-600">
-                    {formatCurrency(
-                      court.san_cons.reduce((min, sub) => Math.min(min, sub.gia_co_ban), Infinity)
-                    )}
-                    <span className="text-base font-normal text-gray-500">/giờ</span>
-                  </p>
-                </div>
-              )}
-
-              <Button className="w-full" size="lg" onClick={handleBooking}>
-                Đặt sân ngay
-              </Button>
+              <div className="p-6 bg-gray-50 border-t border-gray-100">
+                <button 
+                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all shadow-sm"
+                  onClick={handleBooking}
+                >
+                  Đặt sân ngay
+                </button>
+              </div>
             </div>
           </div>
         </div>

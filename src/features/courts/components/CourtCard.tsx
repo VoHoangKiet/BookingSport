@@ -15,7 +15,7 @@ export function CourtCard({ court }: CourtCardProps) {
 
   return (
     <Link to={`/courts/${court.ma_san}`}>
-      <Card hoverable className="overflow-hidden h-full">
+      <Card className="overflow-hidden h-full border border-gray-100 rounded-lg hover:border-emerald-500 transition-all shadow-none">
         {/* Image */}
         <div className="relative h-48 bg-gray-200">
           {court.anh_san ? (
@@ -25,13 +25,12 @@ export function CourtCard({ court }: CourtCardProps) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-teal-100">
-              <Dribbble className="w-16 h-16 text-emerald-300" />
+            <div className="w-full h-full flex items-center justify-center bg-gray-50">
+              <Dribbble className="w-12 h-12 text-gray-200" />
             </div>
           )}
           {court.bo_mon && (
-            <span className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-emerald-700 flex items-center gap-1">
-              <Dribbble className="w-3 h-3" />
+            <span className="absolute top-3 left-3 px-2 py-1 bg-emerald-600 text-white text-[10px] font-semibold rounded shadow-sm">
               {court.bo_mon.ten_bo_mon}
             </span>
           )}
@@ -39,12 +38,12 @@ export function CourtCard({ court }: CourtCardProps) {
 
         {/* Content */}
         <div className="p-5">
-          <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-1">
+          <h3 className="font-semibold text-lg text-gray-900 mb-1 group-hover:text-emerald-600 transition-colors line-clamp-1">
             {court.ten_san}
           </h3>
           
-          <div className="flex items-center gap-1 text-gray-500 text-sm mb-3">
-            <MapPin className="w-4 h-4 flex-shrink-0" />
+          <div className="flex items-center gap-1.5 text-gray-500 text-xs mb-4">
+            <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="line-clamp-1">{court.dia_chi}</span>
           </div>
 
@@ -52,10 +51,10 @@ export function CourtCard({ court }: CourtCardProps) {
             <div>
               {minPrice && minPrice !== Infinity ? (
                 <>
-                  <span className="text-xs text-gray-500">Từ</span>
-                  <p className="text-lg font-bold text-emerald-600">
+                  <span className="text-[10px] font-medium text-gray-500 block">Giá từ</span>
+                  <p className="text-xl font-bold text-emerald-600 leading-none">
                     {formatCurrency(minPrice)}
-                    <span className="text-sm font-normal text-gray-500">/giờ</span>
+                    <span className="text-xs font-normal text-gray-500 ml-1">/giờ</span>
                   </p>
                 </>
               ) : (
@@ -64,8 +63,8 @@ export function CourtCard({ court }: CourtCardProps) {
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-1 text-sm text-gray-500">
-              <Clock className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium self-end bg-gray-50 px-2 py-1 rounded">
+              <Clock className="w-3.5 h-3.5" />
               <span>{court.gio_mo_cua?.slice(0, 5)} - {court.gio_dong_cua?.slice(0, 5)}</span>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { bookingsApi, paymentApi } from '@/api';
 import { Button, Card, CardBody, Badge, Skeleton } from '@/components/ui';
 import { formatCurrency, formatDate, formatTime, getBookingStatusColor, getBookingStatusLabel } from '@/lib/utils';
 import { Frown, ChevronLeft } from 'lucide-react';
+import type { Booking, BookingDetail } from '@/types';
 
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,7 +13,23 @@ export default function BookingDetailPage() {
 
   const { data: booking, isLoading } = useQuery({
     queryKey: ['booking', id],
-    queryFn: () => bookingsApi.getById(Number(id)),
+    queryFn: async () => {
+      const data = await bookingsApi.getById(Number(id));
+      const response = data as unknown as Record<string, unknown>;
+      const don = (response.don || response) as Booking;
+      const chi_tiet = (response.chi_tiet || don.chi_tiets || []) as BookingDetail[];
+      // Get ngay_dat_san from the first chi_tiet if not directly on don
+      const ngay_dat_san = don.ngay_dat_san || (chi_tiet[0] as unknown as Record<string, unknown>)?.ngay_dat_san as string;
+      const ngay_tao = don.ngay_tao || (don as unknown as Record<string, unknown>).thoi_diem_tao as string;
+      return {
+        ...don,
+        trang_thai: ((don as unknown as Record<string, unknown>).trang_thai_don || don.trang_thai) as import('@/types').BookingStatus,
+        tong_tien: parseFloat(don.tong_tien as unknown as string) || 0,
+        ngay_dat_san: ngay_dat_san,
+        ngay_tao: ngay_tao,
+        chi_tiets: chi_tiet,
+      };
+    },
     enabled: !!id,
   });
 
@@ -66,14 +83,14 @@ export default function BookingDetailPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <Link to="/bookings" className="text-emerald-600 hover:text-emerald-700 text-sm mb-2 flex items-center gap-1">
-            <ChevronLeft className="w-4 h-4" />
+        <div className="mb-8 border-b border-gray-100 pb-5">
+          <Link to="/bookings" className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold mb-4 flex items-center gap-1">
+            <ChevronLeft className="w-3.5 h-3.5" />
             Quay lại lịch sử
           </Link>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-900">Đơn đặt #{booking.ma_don}</h1>
-            <Badge className={getBookingStatusColor(booking.trang_thai)}>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900 leading-tight">Chi tiết đơn hàng #{booking.ma_don}</h1>
+            <Badge className={`text-[10px] font-bold px-2 py-0.5 rounded ${getBookingStatusColor(booking.trang_thai)}`}>
               {getBookingStatusLabel(booking.trang_thai)}
             </Badge>
           </div>
@@ -81,62 +98,63 @@ export default function BookingDetailPage() {
 
         <div className="space-y-6">
           {/* Booking info */}
-          <Card>
-            <CardBody>
-              <h2 className="font-semibold text-lg mb-4">Thông tin đặt sân</h2>
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Sân:</span>
-                  <span className="font-medium">{booking.san_con?.ten_san_con}</span>
+          <Card className="border border-gray-200 rounded-lg overflow-hidden shadow-none">
+            <CardBody className="p-0">
+              <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center gap-2">
+                <div className="w-1 h-3.5 bg-emerald-600 rounded-full"></div>
+                <h2 className="text-sm font-bold text-gray-800">Thông tin dịch vụ</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-medium">Sân cầu lông:</span>
+                  <span className="font-semibold text-gray-900">{booking.san_con?.ten_san_con}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Ngày đặt:</span>
-                  <span className="font-medium">{formatDate(booking.ngay_dat_san)}</span>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-medium">Ngày đặt sân:</span>
+                  <span className="font-semibold text-gray-900 capitalize">{formatDate(booking.ngay_dat_san)}</span>
                 </div>
-                {booking.chi_tiets && booking.chi_tiets.length > 0 && (
-                  <div className="py-2 border-b">
-                    <span className="text-gray-500 block mb-2">Khung giờ:</span>
-                    <div className="flex flex-wrap gap-2">
-                      {booking.chi_tiets.map((detail) => (
-                        <Badge key={detail.ma_chi_tiet} variant="info">
-                          {formatTime(detail.khung_gio.gio_bat_dau)} - {formatTime(detail.khung_gio.gio_ket_thuc)}
-                        </Badge>
-                      ))}
-                    </div>
+                <div className="flex justify-between items-start text-sm">
+                  <span className="text-gray-500 font-medium mt-1">Khung giờ:</span>
+                  <div className="flex flex-wrap gap-1.5 justify-end max-w-[200px]">
+                    {booking.chi_tiets?.map((detail: BookingDetail) => (
+                      <span key={detail.ma_chi_tiet} className="bg-gray-50 border border-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600 rounded-sm">
+                        {detail.khung_gio 
+                          ? `${formatTime(detail.khung_gio.gio_bat_dau)} — ${formatTime(detail.khung_gio.gio_ket_thuc)}`
+                          : `#${(detail as unknown as Record<string, unknown>).ma_khung_gio || 'N/A'}`
+                        }
+                      </span>
+                    ))}
                   </div>
-                )}
-                <div className="flex justify-between py-2 border-b">
-                  <span className="text-gray-500">Phương thức thanh toán:</span>
-                  <span className="font-medium">
-                    {booking.hinh_thuc_thanh_toan === 'chuyen_khoan' ? 'Chuyển khoản (VNPay)' : 'Tiền mặt'}
-                  </span>
                 </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-500">Ngày tạo đơn:</span>
-                  <span className="font-medium">{formatDate(booking.ngay_tao)}</span>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-medium">Hình thức thanh toán:</span>
+                  <span className="font-semibold text-gray-900">
+                    {booking.hinh_thuc_thanh_toan === 'chuyen_khoan' ? 'VNPay Online' : 'Tiền mặt tại quầy'}
+                  </span>
                 </div>
               </div>
             </CardBody>
           </Card>
 
           {/* Payment info */}
-          <Card>
-            <CardBody>
-              <h2 className="font-semibold text-lg mb-4">Thanh toán</h2>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-700 text-lg">Tổng tiền:</span>
-                <span className="text-3xl font-bold text-emerald-600">
-                  {formatCurrency(booking.tong_tien)}
-                </span>
-              </div>
-            </CardBody>
-          </Card>
+          <div className="bg-white border border-gray-200 rounded-lg p-6 flex justify-between items-center">
+            <div>
+              <span className="text-xs font-semibold text-gray-500 block mb-1">Tổng cộng đơn hàng</span>
+              <span className="text-3xl font-bold text-emerald-600 tracking-tight">
+                {formatCurrency(booking.tong_tien)}
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] text-gray-400 block">Mã đơn hàng</span>
+              <span className="font-mono font-bold text-xs">#{booking.ma_don}</span>
+            </div>
+          </div>
 
           {/* Actions */}
           <div className="flex gap-4">
             {canPay && (
               <Button
-                className="flex-1"
+                className="flex-1 py-4 rounded-lg font-bold text-sm shadow-sm"
                 onClick={() => payMutation.mutate()}
                 isLoading={payMutation.isPending}
               >
@@ -146,7 +164,7 @@ export default function BookingDetailPage() {
             {canCancel && (
               <Button
                 variant="danger"
-                className="flex-1"
+                className="flex-1 py-4 rounded-lg font-bold text-sm shadow-sm"
                 onClick={() => {
                   if (confirm('Bạn có chắc muốn hủy đơn đặt này?')) {
                     cancelMutation.mutate();
@@ -154,15 +172,17 @@ export default function BookingDetailPage() {
                 }}
                 isLoading={cancelMutation.isPending}
               >
-                Hủy đơn
+                Hủy đơn đặt
               </Button>
             )}
-            <Button
-              variant="outline"
-              onClick={() => navigate('/bookings')}
-            >
-              Quay lại
-            </Button>
+            {!canPay && !canCancel && (
+              <button
+                className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all shadow-sm"
+                onClick={() => navigate('/bookings')}
+              >
+                Quay lại danh sách
+              </button>
+            )}
           </div>
         </div>
       </div>
