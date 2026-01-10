@@ -12,7 +12,7 @@ const api = axios.create({
 // Request interceptor - Add auth token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = useAuthStore.getState().accessToken;
+    const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -21,33 +21,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - Handle errors
+// Response interceptor - Handle 401 by logging out
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
-    // Handle 401 - Try refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      const refreshToken = useAuthStore.getState().refreshToken;
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {
-            token: refreshToken,
-          });
-          
-          const { access_token } = response.data;
-          useAuthStore.getState().setAccessToken(access_token);
-          
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          return api(originalRequest);
-        } catch {
-          // Refresh failed - logout
-          useAuthStore.getState().logout();
-        }
-      }
+    if (error.response?.status === 401) {
+      // Token invalid or expired - logout and redirect to login
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
     }
     
     return Promise.reject(error);

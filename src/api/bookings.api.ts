@@ -1,12 +1,20 @@
 import api from './axios';
-import type { Booking, CreateBookingRequest, TimeSlot } from '@/types';
+import type { Booking, CreateBookingRequest, SubCourt } from '@/types';
 
 export const bookingsApi = {
-  getAvailableSlots: async (courtId: number, date: string): Promise<TimeSlot[]> => {
+  getAvailableSlots: async (courtId: number, date: string): Promise<SubCourt[]> => {
     const response = await api.get('/api/bookings/available', {
       params: { ma_san: courtId, ngay: date },
     });
-    return response.data;
+    // Transform string prices to numbers
+    return (response.data.data || response.data).map((sub: Record<string, unknown>) => ({
+      ...sub,
+      gia_co_ban: parseFloat(String(sub.gia_co_ban)) || 0,
+      available_slots: (sub.available_slots as Record<string, unknown>[])?.map((slot) => ({
+        ...slot,
+        phu_phi: parseFloat(String(slot.phu_phi)) || 0,
+      })) || [],
+    }));
   },
 
   create: async (data: CreateBookingRequest): Promise<Booking> => {

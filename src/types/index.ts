@@ -23,7 +23,7 @@ export interface Court {
   mo_ta?: string;
   gio_mo_cua: string;
   gio_dong_cua: string;
-  // hinh_anh?: string;
+  hinh_anh?: string;
   anh_san?: string;
   bo_mon?: Sport;
   san_cons?: SubCourt[];
@@ -35,7 +35,10 @@ export interface SubCourt {
   ten_san_con: string;
   gia_co_ban: number;
   mo_ta?: string;
+  thong_tin_san?: string;
+  trang_thai?: string;
   san?: Court;
+  available_slots?: TimeSlot[];
 }
 
 export interface TimeSlot {
@@ -85,9 +88,8 @@ export interface ApiResponse<T> {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  user: User;
+  success: boolean;
+  token: string;
 }
 
 export interface RegisterResponse {

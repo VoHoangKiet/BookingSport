@@ -39,20 +39,16 @@ export default function CourtsPage() {
   const hasFilters = searchQuery || selectedSport;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            Tìm sân thể thao
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Khám phá và đặt sân phù hợp với bạn
-          </p>
+        <div className="mb-10 px-4 sm:px-0">
+          <h1 className="text-3xl font-bold text-gray-900">Tìm kiếm sân đấu</h1>
+          <p className="text-sm text-gray-500 mt-1">Kết nối đam mê — Nâng tầm trải nghiệm</p>
         </div>
 
         {/* Modern Filter Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
             {/* Search Input */}
             <div className="lg:col-span-5">
@@ -68,7 +64,7 @@ export default function CourtsPage() {
                   placeholder="Nhập tên sân bạn muốn tìm..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-10 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white hover:border-gray-300 placeholder:text-gray-400"
+                  className="w-full pl-12 pr-10 py-3 bg-white border border-gray-200 rounded-lg transition-all duration-200 focus:outline-none focus:border-emerald-500 hover:border-gray-300 placeholder:text-gray-400 text-sm"
                 />
                 {searchQuery && (
                   <button
@@ -107,9 +103,9 @@ export default function CourtsPage() {
                   Xóa bộ lọc
                 </Button>
               )}
-              <Button className="flex-1">
-                <Search className="w-4 h-4 mr-2" />
-                Tìm kiếm
+              <Button className="flex-1 rounded-lg h-11 font-bold text-sm">
+                <Search className="w-3.5 h-3.5 mr-2" />
+                Tìm kiếm ngay
               </Button>
             </div>
           </div>
@@ -123,7 +119,7 @@ export default function CourtsPage() {
                   Đang lọc:
                 </span>
                 {searchQuery && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium border border-gray-200">
                     <Search className="w-3 h-3" />
                     "{searchQuery}"
                     <button
@@ -135,7 +131,7 @@ export default function CourtsPage() {
                   </span>
                 )}
                 {selectedSport && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-md text-xs font-medium border border-emerald-100">
                     <Dribbble className="w-3 h-3" />
                     {sportOptions.find(s => String(s.value) === selectedSport)?.label}
                     <button
@@ -160,9 +156,9 @@ export default function CourtsPage() {
           </div>
         ) : courts && courts.length > 0 ? (
           <>
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-gray-600">
-                Tìm thấy <span className="font-semibold text-emerald-600">{courts.length}</span> sân
+            <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
+              <p className="text-sm font-medium text-gray-500">
+                Tìm thấy <span className="text-gray-900 font-bold">{courts.length}</span> kết quả phù hợp
               </p>
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <span>Sắp xếp theo:</span>
@@ -178,7 +174,7 @@ export default function CourtsPage() {
             </div>
           </>
         ) : (
-          <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="text-center py-20 bg-white rounded-lg border border-gray-200">
             <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
               <Search className="w-12 h-12 text-gray-300" />
             </div>

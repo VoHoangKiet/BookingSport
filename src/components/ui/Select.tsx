@@ -28,13 +28,15 @@ export function Select({
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(value || '');
+  const [prevValue, setPrevValue] = useState(value);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find(opt => String(opt.value) === String(selectedValue));
-
-  useEffect(() => {
+  if (value !== prevValue) {
     setSelectedValue(value || '');
-  }, [value]);
+    setPrevValue(value);
+  }
+
+  const selectedOption = options.find(opt => String(opt.value) === String(selectedValue));
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

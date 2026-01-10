@@ -29,6 +29,7 @@ export function getBookingStatusColor(status: string): string {
     tam_giu: 'bg-yellow-100 text-yellow-800',
     da_dat_coc: 'bg-blue-100 text-blue-800',
     da_thanh_toan: 'bg-green-100 text-green-800',
+    da_xac_nhan: 'bg-green-100 text-green-800',
     da_huy: 'bg-red-100 text-red-800',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
@@ -39,6 +40,7 @@ export function getBookingStatusLabel(status: string): string {
     tam_giu: 'Tạm giữ',
     da_dat_coc: 'Đã đặt cọc',
     da_thanh_toan: 'Đã thanh toán',
+    da_xac_nhan: 'Đã thanh toán',
     da_huy: 'Đã hủy',
   };
   return labels[status] || status;
