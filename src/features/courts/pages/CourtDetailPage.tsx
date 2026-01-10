@@ -6,7 +6,7 @@ import { Button, Badge, Skeleton } from '@/components/ui';
 import { formatCurrency } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth.store';
 import type { SubCourt } from '@/types';
-import { MapPin, Dribbble, Frown, ChevronRight } from 'lucide-react';
+import { MapPin, Dribbble, Frown, ChevronRight, CreditCard } from 'lucide-react';
 
 export default function CourtDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -139,16 +139,25 @@ export default function CourtDetailPage() {
                   <div className="w-1 h-3.5 bg-emerald-600 rounded-full"></div>
                   <h2 className="text-sm font-bold text-gray-800">Thông tin khu vực sân ({court.san_cons.length})</h2>
                 </div>
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                   {court.san_cons?.map((sub: SubCourt) => (
                     <div
                       key={sub.ma_san_con}
-                      className="flex flex-col p-4 bg-white border border-gray-100 rounded hover:border-emerald-200 transition-colors group"
+                      className="flex flex-col p-5 bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl hover:border-emerald-400 hover:shadow-lg transition-all group"
                     >
-                      <h3 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">{sub.ten_san_con}</h3>
-                      <div className="flex justify-between items-end mt-2">
-                        <span className="text-xs text-gray-500 font-medium">{sub.mo_ta || 'Sân tiêu chuẩn'}</span>
-                        <span className="text-lg font-bold text-emerald-600">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-bold text-gray-900 text-base group-hover:text-emerald-600 transition-colors">{sub.ten_san_con}</h3>
+                        <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
+                          <Dribbble className="w-4 h-4 text-emerald-600 group-hover:text-white transition-colors" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 font-medium mb-4">{sub.mo_ta || 'Sân tiêu chuẩn'}</p>
+                      <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-gray-400">
+                          <CreditCard className="w-3.5 h-3.5" />
+                          <span className="text-xs font-medium">Giá thuê</span>
+                        </div>
+                        <span className="text-xl font-bold text-emerald-600">
                           {formatCurrency(sub.gia_co_ban)}<span className="text-xs font-normal text-gray-400">/h</span>
                         </span>
                       </div>

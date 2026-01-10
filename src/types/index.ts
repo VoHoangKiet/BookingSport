@@ -6,7 +6,7 @@ export interface User {
   so_dien_thoai?: string;
   dia_chi?: string;
   anh_dai_dien?: string;
-  vai_tro?: string;
+  loai_tai_khoan?: string;
 }
 
 export interface Sport {

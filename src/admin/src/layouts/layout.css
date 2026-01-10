@@ -1,0 +1,4 @@
+.navbar-vertical .navbar-collapse {
+  height: 100vh !important;   /* hoặc calc(100vh - 0px) */
+  overflow: auto !important;
+}

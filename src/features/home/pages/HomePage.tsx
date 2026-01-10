@@ -12,18 +12,22 @@ import {
   Smartphone,
   Dribbble,
   Trophy,
-  Target,
   Volleyball
 } from 'lucide-react';
 import heroBg from '@/assets/hero-bg.png';
+import badmintonIcon from '@/assets/badminton-icon.png';
+import footballIcon from '@/assets/football-icon.png';
+import tableTennisIcon from '@/assets/tabletennis-icon.png';
+import tennisIcon from '@/assets/tennis-icon.png';
 
 // Sport icon mapping
 const sportIcons: Record<string, React.ReactNode> = {
   default: <Dribbble className="w-8 h-8" />,
-  'Bóng đá': <Dribbble className="w-8 h-8" />,
+  'Bóng đá': <img src={footballIcon} alt="Bóng đá" className="w-10 h-10 object-contain" />,
+  'Tennis': <img src={tennisIcon} alt="Tennis" className="w-10 h-10 object-contain" />,
+  'Cầu lông': <img src={badmintonIcon} alt="Cầu lông" className="w-10 h-10 object-contain" />,
+  'Bóng bàn': <img src={tableTennisIcon} alt="Bóng bàn" className="w-10 h-10 object-contain" />,
   'Bóng rổ': <Trophy className="w-8 h-8" />,
-  'Tennis': <Target className="w-8 h-8" />,
-  'Cầu lông': <Volleyball className="w-8 h-8" />,
   'Bóng chuyền': <Volleyball className="w-8 h-8" />,
 };
 
@@ -99,7 +103,7 @@ export default function HomePage() {
                   to={`${ROUTES.COURTS}?ma_bo_mon=${sport.ma_bo_mon}`}
                   className="flex flex-col items-center p-8 bg-white border border-gray-200 rounded-lg hover:border-emerald-500 hover:shadow-xl transition-all group"
                 >
-                  <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center mb-4 text-gray-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                  <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-4 text-emerald-600 transition-all">
                     {sportIcons[sport.ten_bo_mon] || sportIcons.default}
                   </div>
                   <span className="text-sm font-semibold text-gray-600 group-hover:text-gray-900 transition-colors">{sport.ten_bo_mon}</span>
