@@ -6,7 +6,7 @@ import { Button, Badge, Skeleton } from '@/components/ui';
 import { formatCurrency } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth.store';
 import type { SubCourt } from '@/types';
-import { MapPin, Clock, Dribbble, Frown, ChevronRight } from 'lucide-react';
+import { MapPin, Dribbble, Frown, ChevronRight } from 'lucide-react';
 
 export default function CourtDetailPage() {
   const { id } = useParams<{ id: string }>();
