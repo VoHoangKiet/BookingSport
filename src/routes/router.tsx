@@ -3,6 +3,7 @@ import { MainLayout } from '@/components/layout';
 import { ProtectedRoute, PublicOnlyRoute } from './guards';
 import { lazy } from 'react';
 import { LazyWrapper } from './LazyWrapper';
+import PrivateRoute from '@/admin/src/routes/PrivateRoute';
 
 // Lazy load pages
 const HomePage = lazy(() => import('@/features/home/pages/HomePage'));
@@ -16,6 +17,18 @@ const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
 const PaymentResultPage = lazy(() => import('@/features/payment/pages/PaymentResultPage'));
+
+const AdminDashboard = lazy(() => import("@/admin/src/pages/admin/Dashboard"));
+const AdminSports = lazy(() => import("@/admin/src/pages/admin/Sports"));
+const AdminUsers = lazy(() => import("@/admin/src/pages/admin/Users"));
+const AdminTimeSlots = lazy(() => import("@/admin/src/pages/admin/TimeSlots"));
+const OwnerDashboard = lazy(() => import("@/admin/src/pages/owner/Dashboard"));
+const OwnerBookings = lazy(() => import("@/admin/src/pages/owner/Bookings"));
+const OwerMyCourts = lazy(() => import("@/admin/src/pages/owner/MyCourts"));
+const CourtForm = lazy(() => import("@/admin/src/pages/owner/CourtForm"));
+const CourtDetail = lazy(() => import("@/admin/src/pages/owner/CourtDetail"));
+const BookingDetail = lazy(() => import("@/admin/src/pages/owner/BookingDetail"));
+const PaymentResult = lazy(() => import("@/admin/src/pages/owner/PaymentResult"));
 
 export const router = createBrowserRouter([
   {
@@ -85,6 +98,31 @@ export const router = createBrowserRouter([
           },
         ],
       },
+        // ########
+        {
+          path: "admin",
+          element: <PrivateRoute role="admin" />,
+          children: [
+            { index: true, element: <AdminDashboard /> },
+            { path: "users", element: <AdminUsers /> },
+            { path: "configs/time-slots", element: <AdminTimeSlots /> },
+            { path: "sports", element: <AdminSports /> },
+          ],
+        },
+        {
+          path: "owner",
+          element: <PrivateRoute role="chu_san" />,
+          children: [
+            { index: true, element: <OwnerDashboard /> },
+            { path: "courts/my", element: <OwerMyCourts /> },
+            { path: "courts/new", element: <CourtForm /> },
+            { path: "courts/edit/:id", element: <CourtForm /> },
+            { path: "courts/:id", element: <CourtDetail /> },
+            { path: "orders/count", element: <OwnerBookings /> },
+            { path: "dat-san/:id", element: <BookingDetail /> },
+            { path: "payment/result", element: <PaymentResult /> },
+          ],
+        },
     ],
   },
 ]);
