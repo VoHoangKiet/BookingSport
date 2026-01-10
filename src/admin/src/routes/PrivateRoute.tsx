@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/constants";
 import './css/soft-ui-dashboard.scss'
 
 export default function PrivateRoute({ children, role }: { children?: React.ReactElement, role: string }) {
-  const { isAuthenticated, accessToken: token } = useAuthStore();
+  const { isAuthenticated, token } = useAuthStore();
   const location = useLocation();
 
   if (!isAuthenticated) {

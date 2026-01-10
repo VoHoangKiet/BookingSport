@@ -7,17 +7,17 @@ import { useMemo } from 'react';
 import { decodeToken } from '@/admin/src/utils/jwt';
 
 export function Header() {
-  const { isAuthenticated, user, logout, accessToken } = useAuthStore();
+  const { isAuthenticated, user, logout, token } = useAuthStore();
   const navigate = useNavigate();
 
   // const loaiTaiKhoan = user?.loai_tai_khoan;
   const loaiTaiKhoan: string | undefined = useMemo(() => {
     try {
-      return decodeToken(typeof accessToken === "string" ? accessToken : "")?.loai_tai_khoan
+      return decodeToken(typeof token === "string" ? token : "")?.loai_tai_khoan
     } catch (error) {
       console.log(error)
     }
-  }, [accessToken])
+  }, [token])
 
 
   const handleLogout = () => {
