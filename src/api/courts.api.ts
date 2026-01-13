@@ -41,6 +41,33 @@ export const courtsApi = {
     const response = await api.get(`/api/courts/sub/${courtId}`);
     return response.data.data;
   },
+
+  // Find sub-court by ID and get its parent court info
+  findSubCourtById: async (subCourtId: number): Promise<{ subCourt: SubCourt; court: Court } | null> => {
+    try {
+      // Get all courts with their sub-courts
+      const courts = await courtsApi.getAll();
+      
+      // Search each court's sub-courts
+      for (const court of courts) {
+        // Get detailed court info including sub-courts
+        const detailedCourt = await courtsApi.getById(court.ma_san);
+        const subCourts = detailedCourt.san_cons || [];
+        
+        const foundSubCourt = subCourts.find((sub: SubCourt) => sub.ma_san_con === subCourtId);
+        if (foundSubCourt) {
+          return {
+            subCourt: { ...foundSubCourt, san: detailedCourt },
+            court: detailedCourt
+          };
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Error finding sub-court:', error);
+      return null;
+    }
+  },
 };
 
 export const sportsApi = {

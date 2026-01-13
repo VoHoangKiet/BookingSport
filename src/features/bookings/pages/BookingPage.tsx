@@ -417,7 +417,7 @@ export default function BookingPage() {
                       <span>Ngày chơi</span>
                     </div>
                     <span className="text-gray-900 font-bold text-right ml-4 capitalize">
-                      {new Date(selectedDate).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' })}
+                      {new Date(selectedDate + 'T00:00:00').toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' })}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[13px]">
