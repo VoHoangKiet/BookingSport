@@ -36,4 +36,9 @@ export const bookingsApi = {
     const response = await api.put(`/api/bookings/${id}/cancel`);
     return response.data;
   },
+
+  getTimeSlots: async (): Promise<{ ma_khung_gio: number; gio_bat_dau: string; gio_ket_thuc: string; phu_phi: number }[]> => {
+    const response = await api.get('/api/configs/time-slots');
+    return response.data.data || [];
+  },
 };
