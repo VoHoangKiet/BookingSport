@@ -12,12 +12,27 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export function formatDate(date: string | Date): string {
+export function formatDate(dateStr: string | Date): string {
+  if (!dateStr) return '';
+  const date = typeof dateStr === 'string' && dateStr.includes('-') && !dateStr.includes('T')
+    ? (() => {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      })()
+    : new Date(dateStr);
+
   return new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(new Date(date));
+  }).format(date);
+}
+
+export function formatDateToISO(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function formatTime(time: string): string {
