@@ -19,15 +19,16 @@ import badmintonIcon from '@/assets/badminton-icon.png';
 import footballIcon from '@/assets/football-icon.png';
 import tableTennisIcon from '@/assets/tabletennis-icon.png';
 import tennisIcon from '@/assets/tennis-icon.png';
-
+import pickleball from '@/assets/pickleball.png'
 // Sport icon mapping
 const sportIcons: Record<string, React.ReactNode> = {
-  default: <Dribbble className="w-8 h-8" />,
-  'Bóng đá': <img src={footballIcon} alt="Bóng đá" className="w-10 h-10 object-contain" />,
+  default: <Trophy className="w-8 h-8" />,
+  'Đá bóng': <img src={footballIcon} alt="Đá bóng" className="w-10 h-10 object-contain" />,
   'Tennis': <img src={tennisIcon} alt="Tennis" className="w-10 h-10 object-contain" />,
   'Cầu lông': <img src={badmintonIcon} alt="Cầu lông" className="w-10 h-10 object-contain" />,
   'Bóng bàn': <img src={tableTennisIcon} alt="Bóng bàn" className="w-10 h-10 object-contain" />,
-  'Bóng rổ': <Trophy className="w-8 h-8" />,
+  'Bóng rổ': <Dribbble className="w-8 h-8" />,
+  'Pickleball': <img src={pickleball} alt="Pickleball" className="w-10 h-10 object-contain"  />,
   'Bóng chuyền': <Volleyball className="w-8 h-8" />,
 };
 
