@@ -43,7 +43,8 @@ export default function ProfilePage() {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     values: profile ? {
-      ho_ten: profile.ho_ten || '',
+      // @ts-ignore
+      ho_ten: profile.ten || '',
       so_dien_thoai: profile.so_dien_thoai || '',
       dia_chi: profile.dia_chi || '',
     } : undefined,
@@ -64,6 +65,10 @@ export default function ProfilePage() {
       setUser(data);
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
+    onError: (error: any) => {
+      console.log(error)
+      alert(error?.response?.data?.message || "Đã xảy ra lỗi!")
+    }
   });
 
   const changePasswordMutation = useMutation({
