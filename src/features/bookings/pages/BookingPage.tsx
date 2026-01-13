@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { courtsApi, bookingsApi, paymentApi } from '@/api';
 import { Button, Skeleton } from '@/components/ui';
-import { formatCurrency, formatTime } from '@/lib/utils';
+import { formatCurrency, formatTime, formatDateToISO } from '@/lib/utils';
 import type { TimeSlot, PaymentMethod, SubCourt } from '@/types';
 import { Frown, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, CreditCard, Banknote, Sun, CloudSun, Moon } from 'lucide-react';
 
@@ -20,10 +20,18 @@ export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+    return formatDateToISO(tomorrow);
   });
 
-  const [viewDate, setViewDate] = useState(new Date(selectedDate));
+  const [viewDate, setViewDate] = useState(() => {
+    const d = new Date(selectedDate);
+    // Ensure we parse as local date if it's YYYY-MM-DD
+    if (selectedDate.includes('-') && !selectedDate.includes('T')) {
+      const [y, m, day] = selectedDate.split('-').map(Number);
+      return new Date(y, m - 1, day);
+    }
+    return d;
+  });
   const [selectedSubCourt, setSelectedSubCourt] = useState<number | null>(null);
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('chuyen_khoan');
@@ -132,7 +140,7 @@ export default function BookingPage() {
     }
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = formatDateToISO(date);
       const isPast = date < today;
       days.push({ day: i, month, year, isCurrentMonth: true, disabled: isPast, value: dateStr, isToday: date.getTime() === today.getTime() });
     }
@@ -417,7 +425,10 @@ export default function BookingPage() {
                       <span>Ngày chơi</span>
                     </div>
                     <span className="text-gray-900 font-bold text-right ml-4 capitalize">
-                      {new Date(selectedDate + 'T00:00:00').toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' })}
+                      {(() => {
+                        const [y, m, d] = selectedDate.split('-').map(Number);
+                        return new Date(y, m - 1, d).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
+                      })()}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[13px]">
