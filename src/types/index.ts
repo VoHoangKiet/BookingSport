@@ -62,12 +62,13 @@ export interface Booking {
   tong_tien: number;
   trang_thai: BookingStatus;
   hinh_thuc_thanh_toan: PaymentMethod;
-  san_con: SubCourt;
+  san_con?: SubCourt;
   nguoi_dung?: User;
   chi_tiets?: BookingDetail[];
+  da_thanh_toan?: number;
 }
 
-export type BookingStatus = 'tam_giu' | 'da_dat_coc' | 'da_thanh_toan' | 'da_huy';
+export type BookingStatus = 'tam_giu' | 'da_dat_coc' | 'da_thanh_toan' | 'da_huy' | 'da_xac_nhan';
 export type PaymentMethod = 'tien_mat' | 'chuyen_khoan';
 
 export interface Province {
