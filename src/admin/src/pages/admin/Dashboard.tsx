@@ -54,8 +54,10 @@ export default function AdminDashboard() {
         setError(null);
 
         const res = await api.get("/admin/stats/overview", { params });
+        console.log({ data: res.data })
         if (mounted) setOverview(res.data);
       } catch (e) {
+        console.log(error)
         setError(e?.response?.data || e.message);
       } finally {
         if (mounted) setLoading(false);
