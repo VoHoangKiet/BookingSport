@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { saveToken } from "../services/auth";
 import { decodeToken } from "../utils/jwt";
 import { useAuthStore } from "@/stores/auth.store";
+import { userApi } from "@/api";
+import { User } from "@/types";
 
 export default function AuthSuccess() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { setToken } = useAuthStore()
+  const { setToken, setUser } = useAuthStore()
 
   useEffect(() => {
     const token = params.get("token");
@@ -17,9 +19,22 @@ export default function AuthSuccess() {
       navigate("/login");
       return;
     }
+
+    const getUserInfo = async () => {
+      try {
+        const user: User & { ten: string } = await userApi.getProfile() as any
+        if (user) {
+          setUser({ ...user, ho_ten: user.ten })
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
     try {
       saveToken(token);
       setToken(token)
+      getUserInfo()
 
       const payload = decodeToken(token);
 
