@@ -135,10 +135,10 @@ export default function BookingDetail() {
                       </span>
                     </p>
                     <p className="text-sm mb-1">
-                      <strong>Tổng tiền:</strong> {Number(don.tong_tien || 0).toLocaleString()} VNĐ
+                      <strong>Tổng tiền:</strong> {Number(don.tong_tien || 0).toLocaleString('vi-VN')} VNĐ
                     </p>
                     <p className="text-sm mb-1">
-                      <strong>Đã thanh toán:</strong> {Number(don.da_thanh_toan || 0).toLocaleString()} VNĐ
+                      <strong>Đã thanh toán:</strong> {Number(don.da_thanh_toan || 0).toLocaleString('vi-VN')} VNĐ
                     </p>
                     <p className="text-sm mb-1">
                       <strong>Hình thức thanh toán:</strong> {don.hinh_thuc_thanh_toan || "Chưa xác định"}
@@ -192,7 +192,7 @@ export default function BookingDetail() {
                                 </td>
                                 <td>
                                   <p className="text-xs font-weight-bold mb-0">
-                                    {Number(ct.don_gia || 0).toLocaleString()} VNĐ
+                                    {Number(ct.don_gia || 0).toLocaleString('vi-VN')} VNĐ
                                   </p>
                                 </td>
                               </tr>
@@ -234,8 +234,8 @@ export default function BookingDetail() {
                               </select>
                               <small className="text-muted">
                                 {paymentType === "dat_coc" 
-                                  ? `Số tiền đặt cọc: ${(Number(don.tong_tien || 0) * 0.3).toLocaleString()} VNĐ`
-                                  : `Số tiền cần thanh toán: ${(Number(don.tong_tien || 0) - Number(don.da_thanh_toan || 0)).toLocaleString()} VNĐ`
+                                  ? `Số tiền đặt cọc: ${(Number(don.tong_tien || 0) * 0.3).toLocaleString('vi-VN')} VNĐ`
+                                  : `Số tiền cần thanh toán: ${(Number(don.tong_tien || 0) - Number(don.da_thanh_toan || 0)).toLocaleString('vi-VN')} VNĐ`
                                 }
                               </small>
                             </div>

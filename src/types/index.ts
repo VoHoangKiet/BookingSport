@@ -25,6 +25,7 @@ export interface Court {
   gio_dong_cua: string;
   hinh_anh?: string;
   anh_san?: string;
+  ma_bo_mon?: number;
   bo_mon?: Sport;
   san_cons?: SubCourt[];
   chu_san?: User;
@@ -91,6 +92,7 @@ export interface ApiResponse<T> {
 export interface LoginResponse {
   success: boolean;
   token: string;
+  user: User | null
 }
 
 export interface RegisterResponse {
@@ -115,6 +117,17 @@ export interface CreateBookingRequest {
   ngay_dat_san: string;
   khung_gios: number[];
   hinh_thuc_thanh_toan: PaymentMethod;
+  slots_loaded_at?: string; // For optimistic locking
+}
+
+export interface MultiSubCourtBookingRequest {
+  bookings: {
+    ma_san_con: number;
+    ngay_dat_san: string;
+    khung_gios: number[];
+  }[];
+  hinh_thuc_thanh_toan: PaymentMethod;
+  slots_loaded_at?: string;
 }
 
 export interface CreatePaymentRequest {

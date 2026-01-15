@@ -120,8 +120,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">Sân chơi nổi bật</h2>
-              <p className="text-sm text-gray-500 mt-1">Những địa điểm được cộng đồng đánh giá cao nhất</p>
+              <h2 className="text-3xl font-bold text-gray-900">Sân chất - Đặt là có</h2>
+              <p className="text-sm text-gray-500 mt-1">Khám phá những sân thể thao chất lượng và tiện nghi</p>
             </div>
             <Link to={ROUTES.COURTS}>
               <button className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-2 border-b-2 border-emerald-100 hover:border-emerald-600 transition-all pb-1">

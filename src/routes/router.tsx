@@ -17,6 +17,7 @@ const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
 const PaymentResultPage = lazy(() => import('@/features/payment/pages/PaymentResultPage'));
+const AboutPage = lazy(() => import('@/pages/AboutPage'));
 
 const AdminDashboard = lazy(() => import("@/admin/src/pages/admin/Dashboard"));
 const AdminSports = lazy(() => import("@/admin/src/pages/admin/Sports"));
@@ -48,6 +49,10 @@ export const router = createBrowserRouter([
       {
         path: 'courts/:id',
         element: <LazyWrapper><CourtDetailPage /></LazyWrapper>,
+      },
+      {
+        path: 'about',
+        element: <LazyWrapper><AboutPage /></LazyWrapper>,
       },
 
       // Auth routes (public only)

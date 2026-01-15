@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
 import { Button } from '@/components/ui';
 import { ROUTES } from '@/lib/constants';
-import { Home, Search, Calendar, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Home, Search, Calendar, User, LogOut, LayoutDashboard, Info } from 'lucide-react';
 import { useMemo } from 'react';
 import { decodeToken } from '@/admin/src/utils/jwt';
 
@@ -52,6 +52,13 @@ export function Header() {
             >
               <Search className="w-4 h-4" />
               Tìm sân
+            </Link>
+            <Link
+              to={ROUTES.ABOUT}
+              className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 transition-colors font-medium"
+            >
+              <Info className="w-4 h-4" />
+              Về chúng tôi
             </Link>
             {isAuthenticated && (
               <Link

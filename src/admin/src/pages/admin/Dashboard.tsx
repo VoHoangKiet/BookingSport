@@ -184,7 +184,7 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <p className="mb-0 text-sm">Doanh thu</p>
-                        <h5 className="mb-0">{overview.totals?.revenue ?? 0} VNĐ</h5>
+                        <h5 className="mb-0">{Number(overview.totals?.revenue ?? 0).toLocaleString('vi-VN')} VNĐ</h5>
                       </div>
                     </div>
                   </div>

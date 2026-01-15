@@ -174,7 +174,7 @@ export default function PaymentResult() {
                           </tr>
                           <tr>
                             <td className="text-sm font-weight-bold">Số tiền:</td>
-                            <td className="text-sm">{result.amount.toLocaleString()} VNĐ</td>
+                            <td className="text-sm">{result.amount.toLocaleString('vi-VN')} VNĐ</td>
                           </tr>
                           {result.transactionNo && (
                             <tr>

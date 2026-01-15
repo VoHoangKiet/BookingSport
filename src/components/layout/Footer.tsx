@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Home, Search, Calendar, Mail, Phone, MapPin } from 'lucide-react';
+import { Home, Search, Calendar, Mail, Phone, MapPin, Info } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -33,6 +33,12 @@ export function Footer() {
                 <Link to="/courts" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                   <Search className="w-4 h-4" />
                   Tìm sân
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                  <Info className="w-4 h-4" />
+                  Về chúng tôi
                 </Link>
               </li>
               <li>

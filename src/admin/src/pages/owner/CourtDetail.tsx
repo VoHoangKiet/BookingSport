@@ -192,7 +192,7 @@ export default function CourtDetail() {
                               {sub.trang_thai === 'hoat_dong' ? 'Hoạt động' : 'Bảo trì'}
                             </span>
                           </td>
-                          <td>{Number(sub.gia_co_ban).toLocaleString()} VNĐ</td>
+                          <td>{Number(sub.gia_co_ban).toLocaleString('vi-VN')} VNĐ</td>
                           <td>
                             <button className="btn btn-sm btn-warning me-2" onClick={() => openSubForm(sub)}>
                               Sửa
