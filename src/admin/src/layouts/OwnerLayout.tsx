@@ -12,9 +12,9 @@ export default function OwnerLayout({ children }) {
   return (
     <div className="g-sidenav-show bg-gray-100 flex gap-2">
       <aside className="flex flex-col w-[15em] gap-4 bg-white">
-        <Link className="p-4 flex gap-2" to="/owner"><LayoutDashboard color={isActive('/owner') ? 'tomato' : '#059669'} /> Dashboard</Link>
-        <Link className="p-4 flex gap-2" to="/owner/orders/count"><Handbag color={isActive('/owner/orders/count') ? 'tomato' : '#000'} /> Bookings</Link>
-        <Link className="p-4 flex gap-2" to="/owner/courts/my"><ListOrdered color={isActive('/owner/courts/my') ? 'tomato' : '#000'} /> MyCourts</Link>
+        <Link className="p-4 flex gap-2" to="/owner"><LayoutDashboard color={isActive('/owner') ?  '#059669' : '#000'} /> Thong_Ke</Link>
+        <Link className="p-4 flex gap-2" to="/owner/orders/count"><Handbag color={isActive('/owner/orders/count') ?  '#059669' : '#000'} /> Danh_Sach_Don</Link>
+        <Link className="p-4 flex gap-2" to="/owner/courts/my"><ListOrdered color={isActive('/owner/courts/my') ?  '#059669' : '#000'} /> Quan_Ly_San</Link>
       </aside>
       <aside style={{ display: "none" }} className="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 " id="sidenav-main">
         <div className="sidenav-header">
@@ -47,7 +47,7 @@ export default function OwnerLayout({ children }) {
                     </g>
                   </svg>
                 </div>
-                <span className="nav-link-text ms-1">Dashboard</span>
+                <span className="nav-link-text ms-1">Thong_Ke</span>
               </Link>
             </li>
 
@@ -69,7 +69,7 @@ export default function OwnerLayout({ children }) {
                     </g>
                   </svg>
                 </div>
-                <span className="nav-link-text ms-1">Bookings</span>
+                <span className="nav-link-text ms-1">Danh_Sach_Don</span>
               </Link>
             </li>
 
@@ -91,7 +91,7 @@ export default function OwnerLayout({ children }) {
                     </g>
                   </svg>
                 </div>
-                <span className="nav-link-text ms-1">MyCourts</span>
+                <span className="nav-link-text ms-1">Quan_Ly_San</span>
               </Link>
             </li>
 

@@ -77,7 +77,7 @@ export default function TimeSlotsAdmin() {
       await loadAll();
     } catch (e) {
         console.error(e);
-      alert("Lỗi khi thêm ngày nghỉ");
+      alert("Lỗi khi thêm ngày lễ");
     }
   }
 
@@ -108,7 +108,7 @@ export default function TimeSlotsAdmin() {
   return (
     <AdminLayout>
       <div className="container-fluid py-4">
-        <h5>Quản lý khung giờ / ngày nghỉ / phụ phí tuần</h5>
+        <h5>Quản lý khung giờ / ngày lễ / phụ phí tuần</h5>
         {loading && <div>Loading...</div>}
 
         <div className="card mb-3">
@@ -152,8 +152,8 @@ export default function TimeSlotsAdmin() {
           <div className="col-md-6">
             <div className="card mb-3">
               <div className="card-header d-flex justify-content-between">
-                <h6 className="mb-0">Danh sách ngày nghỉ</h6>
-                <button className="btn btn-sm btn-success" onClick={openHolidayModal}>Thêm ngày nghỉ</button>
+                <h6 className="mb-0">Danh sách ngày lễ</h6>
+                <button className="btn btn-sm btn-success" onClick={openHolidayModal}>Thêm ngày lễ</button>
               </div>
               <div className="card-body">
                 <ul className="list-group">
@@ -165,7 +165,7 @@ export default function TimeSlotsAdmin() {
                       <div>{h.phi_ngay_le}</div>
                     </li>
                   ))}
-                  {holidays.length === 0 && <li className="list-group-item">Không có ngày nghỉ</li>}
+                  {holidays.length === 0 && <li className="list-group-item">Không có ngày lễ</li>}
                 </ul>
               </div>
             </div>
@@ -206,7 +206,7 @@ export default function TimeSlotsAdmin() {
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Thêm ngày nghỉ</h5>
+                  <h5 className="modal-title">Thêm ngày lễ</h5>
                   <button type="button" className="btn-close" onClick={() => setShowHolidayModal(false)}></button>
                 </div>
                 <div className="modal-body">

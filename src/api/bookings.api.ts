@@ -22,6 +22,11 @@ export const bookingsApi = {
     return response.data;
   },
 
+  createMulti: async (data: import('@/types').MultiSubCourtBookingRequest): Promise<Booking> => {
+    const response = await api.post('/api/bookings/multi', data);
+    return response.data;
+  },
+
   getMyHistory: async (): Promise<Booking[]> => {
     const response = await api.get('/api/bookings/my-history');
     return response.data;

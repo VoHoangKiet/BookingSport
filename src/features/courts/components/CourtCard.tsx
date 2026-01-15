@@ -59,7 +59,7 @@ export function CourtCard({ court }: CourtCardProps) {
                 </>
               ) : (
                 <p className="text-sm font-medium text-emerald-600">
-                  Xem chi tiết giá
+                  Xem chi tiết sân
                 </p>
               )}
             </div>

@@ -27,4 +27,5 @@ export const ROUTES = {
   BOOKING_DETAIL: "/bookings/:id",
   PROFILE: "/profile",
   PAYMENT_RESULT: "/payment/result",
+  ABOUT: "/about",
 } as const;

@@ -12,10 +12,10 @@ export default function AdminLayout({ children }) {
   return (
      <div className="g-sidenav-show bg-gray-100 flex gap-2">
       <aside className="flex flex-col w-[15em] gap-4 bg-white">
-        <Link className="p-4 flex gap-2" to="/admin"><LayoutDashboard color={isActive('/admin') ? '#059669' : '#000'} /> Dashboard</Link>
-        <Link className="p-4 flex gap-2" to="/admin/sports"><Trophy color={isActive('/admin/sports') ? '#059669' : '#000'} /> Sports</Link>
-        <Link className="p-4 flex gap-2" to="/admin/configs/time-slots"><Clock color={isActive('/admin/configs/time-slots') ? '#059669' : '#000'} /> TimeSlots</Link>
-        <Link className="p-4 flex gap-2" to="/admin/users"><Users color={isActive('/admin/users') ? '#059669' : '#000'} /> Users</Link>
+        <Link className="p-4 flex gap-2" to="/admin"><LayoutDashboard color={isActive('/admin') ? '#059669' : '#000'} /> Thong_Ke</Link>
+        <Link className="p-4 flex gap-2" to="/admin/sports"><Trophy color={isActive('/admin/sports') ? '#059669' : '#000'} /> The_Thao</Link>
+        <Link className="p-4 flex gap-2" to="/admin/configs/time-slots"><Clock color={isActive('/admin/configs/time-slots') ? '#059669' : '#000'} /> Khung_Gio_Ngay_Le</Link>
+        <Link className="p-4 flex gap-2" to="/admin/users"><Users color={isActive('/admin/users') ? '#059669' : '#000'} /> Nguoi_dung</Link>
       </aside>
       <aside style={{ display: "none" }} className="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 " id="sidenav-main">
         <div className="sidenav-header">
@@ -48,7 +48,7 @@ export default function AdminLayout({ children }) {
                     </g>
                   </svg>
                 </div>
-                <span className="nav-link-text ms-1">Dashboard</span>
+                <span className="nav-link-text ms-1">Thong_Ke</span>
               </Link>
             </li>
 
@@ -70,7 +70,7 @@ export default function AdminLayout({ children }) {
                     </g>
                   </svg>
                 </div>
-                <span className="nav-link-text ms-1">Sports</span>
+                <span className="nav-link-text ms-1">The_Thao</span>
               </Link>
             </li>
 
@@ -92,7 +92,7 @@ export default function AdminLayout({ children }) {
                     </g>
                   </svg>
                 </div>
-                <span className="nav-link-text ms-1">TimeSlots</span>
+                <span className="nav-link-text ms-1">Khung_Gio_Ngay_Le</span>
               </Link>
             </li>
 
@@ -115,7 +115,7 @@ export default function AdminLayout({ children }) {
                         </g>
                       </svg>
                     </div>
-                    <span className="nav-link-text ms-1">Users</span>
+                    <span className="nav-link-text ms-1">Nguoi_dung</span>
                   </Link>
                 </li>
 
