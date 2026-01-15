@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { SubCourtSelection, TimeSlotSelection } from '@/types/booking.types';
+import type { SubCourtSelection } from '@/types/booking.types';
 import type { SubCourt, TimeSlot } from '@/types';
 
 export function useMultiSubCourtBooking() {
