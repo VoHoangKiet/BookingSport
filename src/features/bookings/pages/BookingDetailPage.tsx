@@ -66,6 +66,16 @@ export default function BookingDetailPage() {
     },
   });
 
+  const payRemainingMutation = useMutation({
+    mutationFn: () => paymentApi.createVnpayPayment({
+      ma_don: Number(id),
+      loai_giao_dich: 'thanh_toan',
+    }),
+    onSuccess: ({ paymentUrl }) => {
+      window.location.href = paymentUrl;
+    },
+  });
+
   const payMutation = useMutation({
     mutationFn: () => paymentApi.createVnpayPayment({
       ma_don: Number(id),
@@ -107,6 +117,7 @@ export default function BookingDetailPage() {
 
   const canCancel = booking.trang_thai === 'tam_giu' || booking.trang_thai === 'da_dat_coc';
   const canPay = booking.trang_thai === 'tam_giu';
+  const canPayRemaining = booking.trang_thai === 'da_coc' && (booking.tong_tien - (booking.da_thanh_toan || 0)) > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -237,6 +248,15 @@ export default function BookingDetailPage() {
                 Thanh toán ngay
               </Button>
             )}
+            {canPayRemaining && (
+              <Button
+                className="flex-1 py-4 rounded-lg font-bold text-sm shadow-sm bg-amber-600 hover:bg-amber-700"
+                onClick={() => payRemainingMutation.mutate()}
+                isLoading={payRemainingMutation.isPending}
+              >
+                Thanh toán phần còn lại
+              </Button>
+            )}
             {canCancel && (
               <Button
                 variant="danger"
@@ -251,7 +271,7 @@ export default function BookingDetailPage() {
                 Hủy đơn đặt
               </Button>
             )}
-            {!canPay && !canCancel && (
+            {!canPay && !canCancel && !canPayRemaining && (
               <button
                 className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all shadow-sm"
                 onClick={() => navigate('/bookings')}

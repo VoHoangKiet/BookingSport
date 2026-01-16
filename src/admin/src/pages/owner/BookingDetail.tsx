@@ -86,6 +86,37 @@ export default function BookingDetail() {
     });
   }
 
+  async function handleUpdateStatus(newStatus) {
+    const statusText = {
+      'dang_su_dung': 'Đang sử dụng',
+      'hoan_thanh': 'Hoàn thành'
+    };
+
+    Modal.confirm({
+      title: 'Xác nhận cập nhật trạng thái',
+      icon: <ExclamationCircleOutlined />,
+      content: `Bạn có chắc chắn muốn chuyển đơn sang trạng thái "${statusText[newStatus]}"?`,
+      okText: 'Xác nhận',
+      cancelText: 'Hủy',
+      onOk: async () => {
+        try {
+          const res = await api.put(`/bookings/${id}/status`, {
+            trang_thai: newStatus
+          });
+          if (res.data.success) {
+            message.success("Cập nhật trạng thái thành công");
+            load();
+          } else {
+            message.error(res.data.message || "Không thể cập nhật trạng thái");
+          }
+        } catch (e) {
+          console.error(e);
+          message.error(e.response?.data?.message || "Lỗi khi cập nhật trạng thái");
+        }
+      }
+    });
+  }
+
   useEffect(() => { load(); }, [id]);
 
   const getStatusConfig = (status) => {
@@ -127,15 +158,46 @@ export default function BookingDetail() {
     );
   }
 
-  const { don, chi_tiet } = booking;
+  const { don, chi_tiet, customer } = booking;
   const statusConfig = getStatusConfig(don.trang_thai_don);
 
   const columns = [
-    { title: 'Mã chi tiết', dataIndex: 'ma_chi_tiet', key: 'ma_chi_tiet', render: (val) => <Text strong>#{val}</Text> },
-    { title: 'Sân con', dataIndex: 'ma_san_con', key: 'ma_san_con', render: (val) => `Sân #${val}` },
-    { title: 'Khung giờ', dataIndex: 'ma_khung_gio', key: 'ma_khung_gio', render: (val) => `Khung #${val}` },
-    { title: 'Ngày đặt', dataIndex: 'ngay_dat_san', key: 'ngay_dat_san', render: (val) => dayjs(val).format('DD/MM/YYYY') },
-    { title: 'Đơn giá', dataIndex: 'don_gia', key: 'don_gia', align: 'right', render: (val) => <Text strong style={{ color: COLORS.success }}>{Number(val || 0).toLocaleString('de-DE')} đ</Text> },
+    { 
+      title: 'Mã chi tiết', 
+      dataIndex: 'ma_chi_tiet', 
+      key: 'ma_chi_tiet', 
+      render: (val) => <Text strong>#{val}</Text> 
+    },
+    { 
+      title: 'Sân con', 
+      dataIndex: 'san_con', 
+      key: 'san_con', 
+      render: (sanCon, record) => sanCon?.ten_san_con || `Sân #${record.ma_san_con}` 
+    },
+    { 
+      title: 'Khung giờ', 
+      dataIndex: 'khung_gio', 
+      key: 'khung_gio', 
+      render: (khungGio, record) => {
+        if (khungGio?.gio_bat_dau && khungGio?.gio_ket_thuc) {
+          return `${khungGio.gio_bat_dau.slice(0, 5)} - ${khungGio.gio_ket_thuc.slice(0, 5)}`;
+        }
+        return `Khung #${record.ma_khung_gio}`;
+      }
+    },
+    { 
+      title: 'Ngày đặt', 
+      dataIndex: 'ngay_dat_san', 
+      key: 'ngay_dat_san', 
+      render: (val) => dayjs(val).format('DD/MM/YYYY') 
+    },
+    { 
+      title: 'Đơn giá', 
+      dataIndex: 'don_gia', 
+      key: 'don_gia', 
+      align: 'right', 
+      render: (val) => <Text strong style={{ color: COLORS.success }}>{Number(val || 0).toLocaleString('vi-VN')} đ</Text> 
+    },
   ];
 
   return (
@@ -155,12 +217,16 @@ export default function BookingDetail() {
               <Descriptions column={{ xs: 1, sm: 2 }} size="small" bordered>
                 <Descriptions.Item label="Mã đơn">#{don.ma_don}</Descriptions.Item>
                 <Descriptions.Item label="Trạng thái"><Tag color={statusConfig.color} icon={statusConfig.icon}>{statusConfig.text}</Tag></Descriptions.Item>
-                <Descriptions.Item label="Mã người dùng">#{don.ma_nguoi_dung}</Descriptions.Item>
+                <Descriptions.Item label="Mã khách hàng">#{don.ma_nguoi_dung}</Descriptions.Item>
+                <Descriptions.Item label="Tên khách hàng">{customer?.ten || 'Chưa cập nhật'}</Descriptions.Item>
+                <Descriptions.Item label="Email">{customer?.email || 'Chưa cập nhật'}</Descriptions.Item>
+                <Descriptions.Item label="Số điện thoại">{customer?.so_dien_thoai || 'Chưa cập nhật'}</Descriptions.Item>
+                <Descriptions.Item label="Địa chỉ" span={2}>{customer?.dia_chi || 'Chưa cập nhật'}</Descriptions.Item>
                 <Descriptions.Item label="Thời điểm tạo">{dayjs(don.thoi_diem_tao).format('DD/MM/YYYY HH:mm')}</Descriptions.Item>
                 <Descriptions.Item label="Hình thức TT">{getPaymentMethodText(don.hinh_thuc_thanh_toan)}</Descriptions.Item>
-                <Descriptions.Item label="Tổng tiền"><Text strong>{Number(don.tong_tien || 0).toLocaleString('de-DE')} đ</Text></Descriptions.Item>
-                <Descriptions.Item label="Đã thanh toán">{Number(don.da_thanh_toan || 0).toLocaleString('de-DE')} đ</Descriptions.Item>
-                <Descriptions.Item label="Còn lại"><Text type="danger">{(Number(don.tong_tien || 0) - Number(don.da_thanh_toan || 0)).toLocaleString('de-DE')} đ</Text></Descriptions.Item>
+                <Descriptions.Item label="Tổng tiền"><Text strong>{Number(don.tong_tien || 0).toLocaleString('vi-VN')} đ</Text></Descriptions.Item>
+                <Descriptions.Item label="Đã thanh toán">{Number(don.da_thanh_toan || 0).toLocaleString('vi-VN')} đ</Descriptions.Item>
+                <Descriptions.Item label="Còn lại" span={2}><Text type="danger">{(Number(don.tong_tien || 0) - Number(don.da_thanh_toan || 0)).toLocaleString('vi-VN')} đ</Text></Descriptions.Item>
               </Descriptions>
             </Card>
 
@@ -178,11 +244,31 @@ export default function BookingDetail() {
           </Col>
 
           <Col xs={24} lg={6}>
-            {don.trang_thai_don !== "da_huy" && don.trang_thai_don !== "hoan_thanh" && (
-              <Card bordered={false} size="small">
-                <Button danger block onClick={handleCancel}>Hủy đơn</Button>
-              </Card>
-            )}
+            <Space direction="vertical" style={{ width: '100%' }} size={8}>
+              {/* Cập nhật trạng thái */}
+              {don.trang_thai_don === "da_xac_nhan" && (
+                <Card bordered={false} size="small" title="Cập nhật trạng thái">
+                  <Button type="primary" block onClick={() => handleUpdateStatus('dang_su_dung')}>
+                    Chuyển sang Đang sử dụng
+                  </Button>
+                </Card>
+              )}
+              
+              {don.trang_thai_don === "dang_su_dung" && (
+                <Card bordered={false} size="small" title="Cập nhật trạng thái">
+                  <Button type="primary" block onClick={() => handleUpdateStatus('hoan_thanh')}>
+                    Chuyển sang Hoàn thành
+                  </Button>
+                </Card>
+              )}
+
+              {/* Hủy đơn */}
+              {don.trang_thai_don !== "da_huy" && don.trang_thai_don !== "hoan_thanh" && (
+                <Card bordered={false} size="small">
+                  <Button danger block onClick={handleCancel}>Hủy đơn</Button>
+                </Card>
+              )}
+            </Space>
           </Col>
         </Row>
       </Space>

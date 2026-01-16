@@ -133,7 +133,7 @@ export default function OwnerLayout({ children }) {
             </div>
             {!collapsed && (
               <span className="text-lg font-bold text-gray-900 tracking-tight truncate whitespace-nowrap">
-                Owner Portal
+                Chủ sân
               </span>
             )}
           </div>

@@ -191,7 +191,10 @@ https://quan-ly-dat-lich-san-the-thao.onrender.com/api#/
 | 5.3 | GET | `/api/bookings/my-history` | Lịch sử đặt sân | ✅ | User |
 | 5.4 | GET | `/api/bookings/:id` | Chi tiết đơn | ✅ | User/Owner |
 | 5.5 | PUT | `/api/bookings/:id/cancel` | Hủy đơn | ✅ | User/Owner |
-<!-- | 5.6 | GET | `/api/bookings/owner/list` | Đơn tại sân của tôi | ✅ | Owner | -->
+| 5.6 | PUT | `/api/bookings/:id/status` | Cập nhật trạng thái đơn | ✅ | Owner |
+| 5.7 | POST | `/api/bookings/status/trigger-update` | Kích hoạt cập nhật trạng thái | ✅ | Owner |
+| 5.8 | GET | `/api/bookings/status/info` | Thông tin hệ thống cập nhật | ❌ | - |
+<!-- | 5.9 | GET | `/api/bookings/owner/list` | Đơn tại sân của tôi | ✅ | Owner | -->
 
 ---5.1
 + /api/bookings/available?ma_san=2&ngay=2025-12-31 Kiểm tra khung giờ trống theo sân và ngày được chọn
@@ -201,6 +204,18 @@ https://quan-ly-dat-lich-san-the-thao.onrender.com/api#/
     { 
         "ma_san_con": 6, "ngay_dat_san": "2025-12-31", "khung_gios": [11,12] , "hinh_thuc_thanh_toan":    "chuyen_khoan" 
     }
+---5.6
++ Cập nhật trạng thái đơn (Owner):
+PUT /api/bookings/:id/status
+    {
+        "trang_thai": "dang_su_dung"  // hoặc "hoan_thanh"
+    }
+---5.7
++ Kích hoạt cập nhật trạng thái ngay lập tức (Owner/Admin):
+POST /api/bookings/status/trigger-update
+---5.8
++ Xem thông tin về hệ thống tự động cập nhật trạng thái:
+GET /api/bookings/status/info
 ## 💳 6. PAYMENT APIs
 
 | STT | Method | Endpoint | Mô tả | Auth | Role |

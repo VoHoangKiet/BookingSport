@@ -51,6 +51,8 @@ const COLORS = {
   secondary: '#6B7280',
   success: '#059669',
   warning: '#D97706',
+  danger: '#EF4444',
+  info: '#3B82F6',
   muted: '#9CA3AF',
   grid: '#F3F4F6'
 };
@@ -77,25 +79,64 @@ export default function AdminDashboard() {
   const [overview, setOverview] = useState(null);
   const [error, setError] = useState(null);
 
-  const [period, setPeriod] = useState("day");
+  const [period, setPeriod] = useState("month");
   const [dateValue, setDateValue] = useState(dayjs());
 
-  // Chart data
-  const revenueData = [
-    { name: 'T2', revenue: 4200000, bookings: 12 },
-    { name: 'T3', revenue: 3800000, bookings: 10 },
-    { name: 'T4', revenue: 5100000, bookings: 15 },
-    { name: 'T5', revenue: 4700000, bookings: 14 },
-    { name: 'T6', revenue: 6200000, bookings: 18 },
-    { name: 'T7', revenue: 8500000, bookings: 25 },
-    { name: 'CN', revenue: 7800000, bookings: 22 },
-  ];
+  // Define color mapping for user types - only show users and owners
+  const USER_TYPE_COLORS = {
+    // English keys
+    'user': '#059669',
+    'owner': '#6B7280',
+    // Vietnamese keys
+    'khach_hang': '#059669',
+    'chu_san': '#6B7280',
+    // Short keys
+    'kh': '#059669',
+    'cs': '#6B7280',
+  };
 
-  const userDistribution = [
-    { name: 'Khách hàng', value: 75, color: '#059669' },
-    { name: 'Chủ sân', value: 20, color: '#6B7280' },
-    { name: 'Admin', value: 5, color: '#D97706' },
-  ];
+  // Helper function to get color
+  const getColorForUserType = (ma_loai, ten_loai) => {
+    if (!ma_loai && !ten_loai) return '#9CA3AF';
+    
+    // Direct match by ma_loai
+    if (USER_TYPE_COLORS[ma_loai]) {
+      return USER_TYPE_COLORS[ma_loai];
+    }
+    
+    // Lowercase match
+    const lowerKey = ma_loai ? ma_loai.toLowerCase() : '';
+    if (USER_TYPE_COLORS[lowerKey]) {
+      return USER_TYPE_COLORS[lowerKey];
+    }
+    
+    // Match by ten_loai (display name)
+    const lowerName = ten_loai ? ten_loai.toLowerCase() : '';
+    if (lowerName.includes('người dùng') || lowerName.includes('khách')) return '#059669';
+    if (lowerName.includes('chủ sân') || lowerName.includes('owner')) return '#6B7280';
+    
+    // Partial match by ma_loai
+    if (lowerKey.includes('user') || lowerKey.includes('khach')) return '#059669';
+    if (lowerKey.includes('owner') || lowerKey.includes('chu')) return '#6B7280';
+    
+    // Default gray
+    return '#9CA3AF';
+  };
+
+  // Filter function to exclude admin
+  const filterUserDistribution = (distribution) => {
+    if (!distribution) return [];
+    return distribution.filter(u => {
+      const ma_loai = (u.ma_loai || '').toLowerCase();
+      const ten_loai = (u.ten_loai || '').toLowerCase();
+      // Exclude admin/quan_tri
+      return !ma_loai.includes('admin') && 
+             !ma_loai.includes('quan_tri') && 
+             !ma_loai.includes('qt') &&
+             !ten_loai.includes('admin') &&
+             !ten_loai.includes('quản trị');
+    });
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -110,7 +151,11 @@ export default function AdminDashboard() {
         setLoading(true);
         setError(null);
         const res = await api.get("/admin/stats/overview", { params });
-        if (mounted) setOverview(res.data);
+        if (mounted) {
+          console.log('Overview data:', res.data);
+          console.log('User distribution:', res.data.user_distribution);
+          setOverview(res.data);
+        }
       } catch (e) {
         console.error(e);
         setError(e?.response?.data || e.message);
@@ -124,10 +169,10 @@ export default function AdminDashboard() {
   }, [period, dateValue]);
 
   const stats = [
-    { title: 'Người dùng', value: overview?.totals?.users ?? 0, icon: <UserOutlined />, trend: '+12%', up: true, color: '#059669' },
-    { title: 'Sân', value: overview?.totals?.sands ?? 0, icon: <BuildOutlined />, trend: '+8%', up: true, color: '#3B82F6' },
-    { title: 'Đặt sân', value: overview?.totals?.orders ?? 0, icon: <CalendarOutlined />, trend: '+24%', up: true, color: '#F59E0B' },
-    { title: 'Doanh thu', value: overview?.totals?.revenue ?? 0, icon: <LineChartOutlined />, trend: '+15%', up: true, color: '#EF4444', isPrice: true },
+    { title: 'Người dùng', value: overview?.totals?.users ?? 0, icon: <UserOutlined />,color: COLORS.success},
+    { title: 'Sân', value: overview?.totals?.sands ?? 0, icon: <BuildOutlined />,color: COLORS.info },
+    { title: 'Đặt sân', value: overview?.totals?.orders ?? 0, icon: <CalendarOutlined />, color: COLORS.warning},
+    { title: 'Doanh thu', value: overview?.totals?.revenue ?? 0, icon: <LineChartOutlined />, color: COLORS.danger, isPrice: true},
   ];
 
   return (
@@ -136,7 +181,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <Title level={4} style={{ margin: 0 }}>Dashboard</Title>
+            <Title level={4} style={{ margin: 0 }}>Thống kê</Title>
             <Text type="secondary">Tổng quan hoạt động hệ thống</Text>
           </div>
           
@@ -173,15 +218,15 @@ export default function AdminDashboard() {
                       <Statistic
                         title={<Text type="secondary" strong>{stat.title}</Text>}
                         value={stat.value}
-                        formatter={(val) => stat.isPrice ? `${(val/1000000).toFixed(1)}M` : val.toLocaleString('vi-VN')}
+                        formatter={(val) => stat.isPrice ? `${val.toLocaleString('vi-VN')}đ` : val.toLocaleString('vi-VN')}
                         prefix={React.cloneElement(stat.icon, { style: { color: stat.color, marginRight: 8 } })}
                         valueStyle={{ fontWeight: 700 }}
                       />
-                      <div className="flex items-center gap-1 mt-2 text-xs">
+                      {/* <div className="flex items-center gap-1 mt-2 text-xs">
                         {stat.up ? <ArrowUpOutlined style={{ color: '#059669' }} /> : <ArrowDownOutlined style={{ color: '#ef4444' }} />}
                         <Text strong style={{ color: stat.up ? '#059669' : '#ef4444' }}>{stat.trend}</Text>
                         <Text type="secondary" style={{ marginLeft: 4 }}>vs kỳ trước</Text>
-                      </div>
+                      </div> */}
                     </Card>
                   </Col>
                 ))}
@@ -192,7 +237,7 @@ export default function AdminDashboard() {
                 <Col xs={24} lg={16}>
                   <Card title="Doanh thu theo ngày" bordered={false} className="shadow-sm">
                     <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={revenueData}>
+                      <AreaChart data={overview.daily_revenue || []}>
                         <defs>
                           <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.15}/>
@@ -200,8 +245,18 @@ export default function AdminDashboard() {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} vertical={false} />
-                        <XAxis dataKey="name" stroke={COLORS.muted} fontSize={11} tickLine={false} axisLine={false} />
-                        <YAxis stroke={COLORS.muted} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${v/1000000}M`} />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke={COLORS.muted} 
+                          fontSize={11} 
+                          tickLine={false} 
+                          axisLine={false}
+                          tickFormatter={(date) => {
+                            const d = dayjs(date);
+                            return period === 'month' ? d.format('DD') : d.format('DD/MM');
+                          }}
+                        />
+                        <YAxis stroke={COLORS.muted} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toLocaleString('vi-VN')}đ`} />
                         <Tooltip content={<CustomTooltip />} />
                         <Area type="monotone" dataKey="revenue" stroke={COLORS.primary} strokeWidth={2} fill="url(#colorRevenue)" name="Doanh thu" />
                       </AreaChart>
@@ -212,13 +267,31 @@ export default function AdminDashboard() {
                   <Card title="Phân bố người dùng" bordered={false} className="shadow-sm">
                     <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
-                        <Pie data={userDistribution} cx="50%" cy="45%" innerRadius={60} outerRadius={85} paddingAngle={2} dataKey="value">
-                          {userDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Pie 
+                          data={filterUserDistribution(overview.user_distribution).map(u => ({
+                            name: u.ten_loai,
+                            value: u.count,
+                            ma_loai: u.ma_loai,
+                            fill: getColorForUserType(u.ma_loai, u.ten_loai)
+                          }))} 
+                          cx="50%" 
+                          cy="45%" 
+                          innerRadius={60} 
+                          outerRadius={85} 
+                          paddingAngle={2} 
+                          dataKey="value"
+                          // label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          labelLine={false}
+                        >
+                          {filterUserDistribution(overview.user_distribution).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={getColorForUserType(entry.ma_loai, entry.ten_loai)} />
                           ))}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend verticalAlign="bottom" height={36} />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </Card>

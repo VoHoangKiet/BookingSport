@@ -128,9 +128,9 @@ export default function MyCourts() {
                                 {c.dia_chi}
                               </Paragraph>
                             </div>
-                            <Text strong style={{ color: '#059669' }}>
-                              {Number(c.gia_thue || 0).toLocaleString('de-DE')} đ/giờ
-                            </Text>
+                            {/* <Text strong style={{ color: '#059669' }}>
+                              <p>Xem sân</p>
+                            </Text> */}
                           </Space>
                         }
                       />

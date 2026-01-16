@@ -138,7 +138,7 @@ export default function AdminLayout({ children }) {
             </div>
             {!collapsed && (
               <span className="text-lg font-bold text-gray-900 tracking-tight truncate whitespace-nowrap">
-                Admin Panel
+                Quản trị viên
               </span>
             )}
           </div>

@@ -12,19 +12,14 @@ import {
   Typography, 
   Space, 
   Spin, 
-  Alert,
-  Table,
-  Tag,
-  Progress
+  Alert
 } from 'antd';
 import {
   EnvironmentOutlined,
-  DollarOutlined,
+  DollarOutlined, 
   ArrowUpOutlined,
   ArrowDownOutlined,
   CheckCircleOutlined,
-  SyncOutlined,
-  CloseCircleOutlined,
   ShoppingOutlined
 } from "@ant-design/icons";
 import {
@@ -80,35 +75,36 @@ export default function OwnerDashboard() {
   const [overview, setOverview] = useState(null);
   const [error, setError] = useState(null);
 
-  const [period, setPeriod] = useState("day");
+  const [period, setPeriod] = useState("month");
   const [dateValue, setDateValue] = useState(dayjs());
 
-  // Sample chart data
-  const revenueData = [
-    { name: 'T2', revenue: 2200000, bookings: 8 },
-    { name: 'T3', revenue: 1800000, bookings: 6 },
-    { name: 'T4', revenue: 2500000, bookings: 9 },
-    { name: 'T5', revenue: 2100000, bookings: 7 },
-    { name: 'T6', revenue: 3200000, bookings: 12 },
-    { name: 'T7', revenue: 4500000, bookings: 16 },
-    { name: 'CN', revenue: 4000000, bookings: 14 },
-  ];
+  // Status name mapping
+  const STATUS_NAMES = {
+    'tam_giu': 'Tạm giữ',
+    'da_coc': 'Đã cọc',
+    'da_xac_nhan': 'Đã xác nhận',
+    'dang_su_dung': 'Đang sử dụng',
+    'hoan_thanh': 'Hoàn thành',
+    'da_huy': 'Đã hủy',
+  };
 
-  const bookingStatusData = [
-    { name: 'Hoàn thành', value: 65, color: COLORS.success },
-    { name: 'Đang chờ', value: 20, color: COLORS.warning },
-    { name: 'Đã hủy', value: 15, color: COLORS.danger },
-  ];
+  // Status colors
+  const STATUS_COLORS = {
+    'tam_giu': COLORS.muted,
+    'da_coc': COLORS.info,
+    'da_xac_nhan': COLORS.warning,
+    'dang_su_dung': COLORS.primary,
+    'hoan_thanh': COLORS.success,
+    'da_huy': COLORS.danger,
+  };
 
-  const timeSlotData = [
-    { slot: '06:00-08:00', count: 12 },
-    { slot: '08:00-10:00', count: 18 },
-    { slot: '10:00-12:00', count: 8 },
-    { slot: '14:00-16:00', count: 15 },
-    { slot: '16:00-18:00', count: 25 },
-    { slot: '18:00-20:00', count: 30 },
-    { slot: '20:00-22:00', count: 22 },
-  ];
+  // Calculate completion rate
+  const calculateCompletionRate = () => {
+    if (!overview?.status_distribution || overview.status_distribution.length === 0) return 0;
+    const total = overview.status_distribution.reduce((sum, s) => sum + s.count, 0);
+    const completed = overview.status_distribution.find(s => s.status === 'hoan_thanh')?.count || 0;
+    return total > 0 ? Math.round((completed / total) * 100) : 0;
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -137,40 +133,10 @@ export default function OwnerDashboard() {
   }, [period, dateValue]);
 
   const stats = [
-    { title: 'Tổng sân', value: overview?.totals?.sands ?? 0, icon: <EnvironmentOutlined />, trend: '+2', up: true, color: COLORS.info },
-    { title: 'Tổng đơn đặt', value: overview?.totals?.orders ?? 0, icon: <ShoppingOutlined />, trend: '+24%', up: true, color: COLORS.warning },
-    { title: 'Doanh thu', value: overview?.totals?.revenue ?? 0, icon: <DollarOutlined />, trend: '+15%', up: true, color: COLORS.success, isPrice: true },
-    { title: 'Tỷ lệ hoàn thành', value: 85, icon: <CheckCircleOutlined />, trend: '+5%', up: true, color: COLORS.primary, suffix: '%' },
-  ];
-
-  const recentBookings = [
-    { key: 1, id: 'ĐH001', court: 'Sân A1', customer: 'Nguyễn Văn A', time: '18:00-20:00', date: '16/01/2026', status: 'completed', amount: 200000 },
-    { key: 2, id: 'ĐH002', court: 'Sân B2', customer: 'Trần Văn B', time: '08:00-10:00', date: '16/01/2026', status: 'pending', amount: 150000 },
-    { key: 3, id: 'ĐH003', court: 'Sân A1', customer: 'Lê Thị C', time: '16:00-18:00', date: '15/01/2026', status: 'completed', amount: 200000 },
-    { key: 4, id: 'ĐH004', court: 'Sân C1', customer: 'Phạm Văn D', time: '20:00-22:00', date: '15/01/2026', status: 'cancelled', amount: 180000 },
-  ];
-
-  const bookingColumns = [
-    { title: 'Mã đơn', dataIndex: 'id', key: 'id', render: (text) => <Text strong>{text}</Text> },
-    { title: 'Sân', dataIndex: 'court', key: 'court' },
-    { title: 'Khách hàng', dataIndex: 'customer', key: 'customer' },
-    { title: 'Khung giờ', dataIndex: 'time', key: 'time' },
-    { title: 'Ngày', dataIndex: 'date', key: 'date' },
-    { 
-      title: 'Trạng thái', 
-      dataIndex: 'status', 
-      key: 'status',
-      render: (status) => {
-        const config = {
-          completed: { color: 'success', icon: <CheckCircleOutlined />, text: 'Hoàn thành' },
-          pending: { color: 'warning', icon: <SyncOutlined spin />, text: 'Đang chờ' },
-          cancelled: { color: 'error', icon: <CloseCircleOutlined />, text: 'Đã hủy' },
-        };
-        const { color, icon, text } = config[status] || config.pending;
-        return <Tag color={color} icon={icon}>{text}</Tag>;
-      }
-    },
-    { title: 'Số tiền', dataIndex: 'amount', key: 'amount', align: 'right', render: (val) => <Text strong style={{ color: COLORS.success }}>{val.toLocaleString('de-DE')} đ</Text> },
+    { title: 'Tổng sân', value: overview?.totals?.sands ?? 0, icon: <EnvironmentOutlined />, color: COLORS.info },
+    { title: 'Tổng đơn đặt', value: overview?.totals?.orders ?? 0, icon: <ShoppingOutlined />, color: COLORS.warning },
+    { title: 'Doanh thu', value: overview?.totals?.revenue ?? 0, icon: <DollarOutlined />, color: COLORS.success },
+    { title: 'Tỷ lệ hoàn thành', value: calculateCompletionRate(), icon: <CheckCircleOutlined />, color: COLORS.primary, suffix: '%' },
   ];
 
   return (
@@ -198,16 +164,16 @@ export default function OwnerDashboard() {
                     <Statistic
                       title={<Text type="secondary" strong>{stat.title}</Text>}
                       value={stat.value}
-                      formatter={(val) => stat.isPrice ? `${(val/1000000).toFixed(1)}M` : val.toLocaleString('de-DE')}
+                      formatter={(val) => stat.isPrice ? `${val.toLocaleString('vi-VN')}đ` : val.toLocaleString('vi-VN')}
                       prefix={React.cloneElement(stat.icon, { style: { color: stat.color, marginRight: 8 } })}
                       suffix={!stat.isPrice && stat.suffix}
                       valueStyle={{ fontWeight: 700 }}
                     />
-                    <div className="flex items-center gap-1 mt-2 text-xs">
+                    {/* <div className="flex items-center gap-1 mt-2 text-xs">
                       {stat.up ? <ArrowUpOutlined style={{ color: COLORS.success }} /> : <ArrowDownOutlined style={{ color: COLORS.danger }} />}
                       <Text strong style={{ color: stat.up ? COLORS.success : COLORS.danger }}>{stat.trend}</Text>
                       <Text type="secondary" style={{ marginLeft: 4 }}>vs kỳ trước</Text>
-                    </div>
+                    </div> */}
                   </Card>
                 </Col>
               ))}
@@ -217,7 +183,7 @@ export default function OwnerDashboard() {
               <Col xs={24} lg={16}>
                 <Card title="Doanh thu theo ngày" bordered={false} className="shadow-sm">
                   <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={revenueData}>
+                    <AreaChart data={overview?.daily_revenue || []}>
                       <defs>
                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.15}/>
@@ -225,8 +191,18 @@ export default function OwnerDashboard() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} vertical={false} />
-                      <XAxis dataKey="name" stroke={COLORS.muted} fontSize={11} tickLine={false} axisLine={false} />
-                      <YAxis stroke={COLORS.muted} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${v/1000000}M`} />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke={COLORS.muted} 
+                        fontSize={11} 
+                        tickLine={false} 
+                        axisLine={false}
+                        tickFormatter={(date) => {
+                          const d = dayjs(date);
+                          return period === 'month' ? d.format('DD') : d.format('DD/MM');
+                        }}
+                      />
+                      <YAxis stroke={COLORS.muted} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toLocaleString('vi-VN')}đ`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Area type="monotone" dataKey="revenue" stroke={COLORS.primary} strokeWidth={2} fill="url(#colorRevenue)" name="Doanh thu (đ)" />
                     </AreaChart>
@@ -237,8 +213,22 @@ export default function OwnerDashboard() {
                 <Card title="Trạng thái đơn đặt" bordered={false} className="shadow-sm">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
-                      <Pie data={bookingStatusData} cx="50%" cy="45%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value">
-                        {bookingStatusData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
+                      <Pie 
+                        data={(overview?.status_distribution || []).map(s => ({
+                          name: STATUS_NAMES[s.status] || s.status,
+                          value: s.count,
+                          fill: STATUS_COLORS[s.status] || COLORS.muted
+                        }))} 
+                        cx="50%" 
+                        cy="45%" 
+                        innerRadius={55} 
+                        outerRadius={80} 
+                        paddingAngle={3} 
+                        dataKey="value"
+                      >
+                        {(overview?.status_distribution || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || COLORS.muted} />
+                        ))}
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
                       <Legend verticalAlign="bottom" height={36} />
@@ -249,10 +239,16 @@ export default function OwnerDashboard() {
             </Row>
 
             <Row gutter={[16, 16]}>
-              <Col xs={24} lg={10}>
+              <Col xs={24}>
                 <Card title="Lượt đặt theo khung giờ" bordered={false} className="shadow-sm">
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={timeSlotData} layout="vertical">
+                    <BarChart 
+                      data={(overview?.top_slots || []).map(s => ({
+                        slot: `${s.khung?.gio_bat_dau || ''}-${s.khung?.gio_ket_thuc || ''}`,
+                        count: s.count
+                      }))} 
+                      layout="vertical"
+                    >
                       <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} horizontal={false} />
                       <XAxis type="number" stroke={COLORS.muted} fontSize={11} tickLine={false} axisLine={false} />
                       <YAxis type="category" dataKey="slot" stroke={COLORS.muted} fontSize={11} tickLine={false} axisLine={false} width={80} />
@@ -260,32 +256,6 @@ export default function OwnerDashboard() {
                       <Bar dataKey="count" fill={COLORS.info} radius={[0, 4, 4, 0]} name="Lượt đặt" />
                     </BarChart>
                   </ResponsiveContainer>
-                </Card>
-              </Col>
-              <Col xs={24} lg={14}>
-                <Card title="Đơn đặt gần đây" bordered={false} className="shadow-sm">
-                  <Table columns={bookingColumns} dataSource={recentBookings} pagination={false} size="small" scroll={{ x: 600 }} />
-                </Card>
-              </Col>
-            </Row>
-
-            <Row gutter={[16, 16]}>
-              <Col xs={24} md={8}>
-                <Card bordered={false} className="shadow-sm">
-                  <Text type="secondary">Tỷ lệ lấp đầy sân</Text>
-                  <Progress percent={72} strokeColor={COLORS.primary} style={{ marginTop: 8 }} />
-                </Card>
-              </Col>
-              <Col xs={24} md={8}>
-                <Card bordered={false} className="shadow-sm">
-                  <Text type="secondary">Tỷ lệ đặt thành công</Text>
-                  <Progress percent={85} strokeColor={COLORS.success} style={{ marginTop: 8 }} />
-                </Card>
-              </Col>
-              <Col xs={24} md={8}>
-                <Card bordered={false} className="shadow-sm">
-                  <Text type="secondary">Đánh giá trung bình</Text>
-                  <Progress percent={90} strokeColor={COLORS.warning} format={() => '4.5/5 ⭐'} style={{ marginTop: 8 }} />
                 </Card>
               </Col>
             </Row>
