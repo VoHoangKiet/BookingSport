@@ -110,7 +110,7 @@ export default function OwnerDashboard() {
     let mounted = true;
 
     async function load() {
-      let params = { period };
+      const params = { period };
       if (period === "day") params.date = dateValue.format("YYYY-MM-DD");
       else if (period === "month") params.month = dateValue.format("YYYY-MM");
       else if (period === "year") params.year = dateValue.format("YYYY");
