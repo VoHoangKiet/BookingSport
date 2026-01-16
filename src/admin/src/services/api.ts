@@ -1,9 +1,13 @@
 // @ts-nocheck
+import { API_BASE_URL } from "@/lib/constants";
 import axios from "axios";
 
 const api = axios.create({
   // baseURL: "http://localhost:3000/api",
-  baseURL: (import.meta.env.VITE_API_BASE_URL || "") + "/api",
+  baseURL: API_BASE_URL + "/api",
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 api.interceptors.request.use((config) => {
