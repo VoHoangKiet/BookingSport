@@ -101,8 +101,11 @@ export default function OwnerLayout({ children }) {
             siderBg: "#ffffff",
           },
           Menu: {
-            itemHeight: 40,
-            itemMarginInline: 8,
+            itemHeight: 44,
+            itemMarginInline: 0,
+            itemPaddingInline: 16,
+            itemMarginBlock: 4,
+            padding: 0,
           }
         }
       }}
@@ -124,7 +127,7 @@ export default function OwnerLayout({ children }) {
             zIndex: 100,
           }}
         >
-          <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100 mb-2 overflow-hidden">
+          <div className="flex items-center gap-3 px-3 py-3 border-b border-gray-100 mb-2 overflow-hidden">
             <div className="min-w-[40px] h-10 rounded-lg bg-emerald-600 flex items-center justify-center shrink-0">
               <EnvironmentOutlined style={{ fontSize: 20, color: '#fff' }} />
             </div>
@@ -140,12 +143,13 @@ export default function OwnerLayout({ children }) {
             selectedKeys={[location.pathname]}
             items={menuItems}
             onClick={({ key }) => navigate(key)}
+            style={{ padding: 5, border: 'none' }}
           />
         </Sider>
         
         <Layout style={{ marginLeft: collapsed ? 80 : 240, transition: "margin-left 0.2s" }}>
-          <Header className="flex items-center justify-between shadow-sm sticky top-0 z-50">
-            <Space size={12}>
+          <Header className="flex items-center justify-between shadow-sm sticky top-0 z-50" style={{ padding: '0 16px' }}>
+            <div className="flex items-center gap-2">
               <Button
                 type="text"
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -153,38 +157,37 @@ export default function OwnerLayout({ children }) {
                 style={{ fontSize: "16px", width: 40, height: 40 }}
               />
               
-              <Divider type="vertical" />
+              <Divider type="vertical" style={{ margin: '0 8px' }} />
               
-              <Space className="hidden md:flex ml-4" size={24}>
-                <Link to={ROUTES.HOME} className="nav-link-antd flex items-center gap-2 text-gray-600 hover:text-emerald-600 font-medium">
+              <div className="hidden lg:flex items-center gap-1">
+                <Link to={ROUTES.HOME} className="nav-link-antd flex items-center gap-1.5 px-3 py-1.5 text-gray-600 hover:text-emerald-600 hover:bg-gray-50 rounded-md font-medium text-sm transition-colors">
                   <HomeOutlined /> Trang chủ
                 </Link>
-                <Link to={ROUTES.COURTS} className="nav-link-antd flex items-center gap-2 text-gray-600 hover:text-emerald-600 font-medium">
+                <Link to={ROUTES.COURTS} className="nav-link-antd flex items-center gap-1.5 px-3 py-1.5 text-gray-600 hover:text-emerald-600 hover:bg-gray-50 rounded-md font-medium text-sm transition-colors">
                   <SearchOutlined /> Tìm sân
                 </Link>
-                <Link to={ROUTES.ABOUT} className="nav-link-antd flex items-center gap-2 text-gray-600 hover:text-emerald-600 font-medium">
+                <Link to={ROUTES.ABOUT} className="nav-link-antd flex items-center gap-1.5 px-3 py-1.5 text-gray-600 hover:text-emerald-600 hover:bg-gray-50 rounded-md font-medium text-sm transition-colors">
                   <InfoCircleOutlined /> Về chúng tôi
                 </Link>
-                <Link to={ROUTES.BOOKINGS} className="nav-link-antd flex items-center gap-2 text-gray-600 hover:text-emerald-600 font-medium">
+                <Link to={ROUTES.BOOKINGS} className="nav-link-antd flex items-center gap-1.5 px-3 py-1.5 text-gray-600 hover:text-emerald-600 hover:bg-gray-50 rounded-md font-medium text-sm transition-colors">
                   <HistoryOutlined /> Lịch đặt
                 </Link>
-              </Space>
-            </Space>
-
-            <div className="flex items-center gap-4">
-              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
-                <div className="flex items-center gap-3 cursor-pointer p-1.5 hover:bg-gray-50 rounded-lg transition-colors">
-                  <div className="text-right hidden sm:block">
-                    <Text strong className="block text-sm" style={{ lineHeight: 1 }}>Chủ sân</Text>
-                    <Text type="secondary" size="small">owner@sport.com</Text>
-                  </div>
-                  <Avatar 
-                    style={{ backgroundColor: '#059669' }} 
-                    icon={<UserOutlined />} 
-                  />
-                </div>
-              </Dropdown>
+              </div>
             </div>
+
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow trigger={['click']}>
+              <div className="flex items-center gap-3 cursor-pointer px-3 py-2 hover:bg-gray-100 rounded-xl transition-all border border-transparent hover:border-gray-200">
+                <Avatar 
+                  size={36}
+                  style={{ backgroundColor: '#059669', flexShrink: 0 }} 
+                  icon={<UserOutlined />} 
+                />
+                <div className="hidden sm:block">
+                  <div className="text-sm font-semibold text-gray-800 leading-tight">Chủ sân</div>
+                  <div className="text-xs text-gray-500">owner@sport.com</div>
+                </div>
+              </div>
+            </Dropdown>
           </Header>
           
           <Content

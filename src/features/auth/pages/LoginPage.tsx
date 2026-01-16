@@ -8,7 +8,7 @@ import { authApi } from '@/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { Button, Input, Card, CardBody } from '@/components/ui';
 import { ROUTES, API_BASE_URL } from '@/lib/constants';
-import { Home } from 'lucide-react';
+import { Home, Building2, Mail, Phone, X } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Email không hợp lệ'),
@@ -22,6 +22,7 @@ export default function LoginPage() {
   const location = useLocation();
   const { setToken, setUser } = useAuthStore();
   const [error, setError] = useState('');
+  const [showOwnerModal, setShowOwnerModal] = useState(false);
 
   const from = location.state?.from?.pathname || ROUTES.HOME;
 
@@ -149,9 +150,79 @@ export default function LoginPage() {
                 Đăng ký ngay
               </Link>
             </p>
+
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => setShowOwnerModal(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors font-medium text-sm"
+              >
+                <Building2 className="w-4 h-4" />
+                Đăng ký làm chủ sân
+              </button>
+            </div>
           </CardBody>
         </Card>
       </div>
+
+      {/* Modal đăng ký chủ sân */}
+      {showOwnerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+            <button
+              onClick={() => setShowOwnerModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Building2 className="w-7 h-7 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Đăng ký làm chủ sân</h3>
+              <p className="text-gray-600 mt-2 text-sm">
+                Vui lòng liên hệ Admin qua thông tin bên dưới để được hỗ trợ đăng ký tài khoản chủ sân.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <a
+                href="mailto:ngcha763@gmail.com"
+                className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500">Email</div>
+                  <div className="font-medium text-gray-900">ngcha763@gmail.com</div>
+                </div>
+              </a>
+
+              <a
+                href="tel:0788589842"
+                className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500">Số điện thoại</div>
+                  <div className="font-medium text-gray-900">0788 589 842</div>
+                </div>
+              </a>
+            </div>
+
+            <button
+              onClick={() => setShowOwnerModal(false)}
+              className="w-full mt-6 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

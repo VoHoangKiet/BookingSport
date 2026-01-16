@@ -1,12 +1,38 @@
 //@ts-nocheck
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import OwnerLayout from "../../layouts/OwnerLayout";
+import { 
+  Card, 
+  Row, 
+  Col, 
+  Button, 
+  Space, 
+  Typography, 
+  Input, 
+  Spin,
+  Empty,
+  message,
+  Tag,
+  Image
+} from 'antd';
+import {
+  PlusOutlined,
+  SearchOutlined,
+  EnvironmentOutlined,
+  EditOutlined,
+  EyeOutlined
+} from "@ant-design/icons";
+
+const { Title, Text, Paragraph } = Typography;
+const { Meta } = Card;
 
 export default function MyCourts() {
+  const navigate = useNavigate();
   const [courts, setCourts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState('');
 
   async function load() {
     setLoading(true);
@@ -15,7 +41,7 @@ export default function MyCourts() {
       setCourts(res.data.data || []);
     } catch (e) {
       console.error(e);
-      alert("Lỗi khi tải sân của tôi");
+      message.error("Lỗi khi tải sân của tôi");
     } finally {
       setLoading(false);
     }
@@ -23,44 +49,99 @@ export default function MyCourts() {
 
   useEffect(() => { load(); }, []);
 
+  const filteredCourts = courts.filter(c => 
+    searchText === '' || 
+    c.ten_san?.toLowerCase().includes(searchText.toLowerCase()) ||
+    c.dia_chi?.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   return (
     <OwnerLayout>
-      <div className="container-fluid py-4">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5>Sân của tôi</h5>
-          <Link className="btn btn-primary" to="/owner/courts/new">Thêm sân</Link>
+      <Space direction="vertical" size={24} style={{ width: '100%' }}>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <Title level={4} style={{ margin: 0 }}>Sân của tôi</Title>
+            <Text type="secondary">Quản lý các sân thể thao của bạn</Text>
+          </div>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/owner/courts/new')}>
+            Thêm sân mới
+          </Button>
         </div>
 
-        {loading ? <div>Loading...</div> : (
-          <div className="row">
-            {courts.map(c => (
-              <div key={c.ma_san} className="col-md-4 mb-3">
-                <div className="card">
-                  <img 
-                    src={c.anh_san ? c.anh_san.split(',')[0] : "/assets/img/bg1.jpg"} 
-                    alt={c.ten_san} 
-                    className="card-img-top" 
-                    style={{ height: '200px', objectFit: 'cover' }}
-                    onError={(e) => { e.target.src = "/assets/img/bg1.jpg"; }}
-                  />
-                  <div className="card-body">
-                    <h6 className="card-title">{c.ten_san}</h6>
-                    <p className="card-text text-muted small">{c.dia_chi}</p>
-                    <Link className="btn btn-sm btn-outline-primary" to={`/owner/courts/${c.ma_san}`}>Chi tiết</Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {courts.length === 0 && (
-              <div className="col-12">
-                <div className="alert alert-info">
-                  Bạn chưa có sân nào. <Link to="/owner/courts/new">Thêm sân mới</Link>
-                </div>
-              </div>
+        <Card bordered={false} className="shadow-sm" bodyStyle={{ padding: 16 }}>
+          <Input
+            placeholder="Tìm theo tên sân, địa chỉ..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 300, marginBottom: 16 }}
+            allowClear
+          />
+
+          <Spin spinning={loading}>
+            {filteredCourts.length === 0 ? (
+              <Empty 
+                description="Bạn chưa có sân nào"
+                style={{ padding: 40 }}
+              >
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/owner/courts/new')}>
+                  Thêm sân mới
+                </Button>
+              </Empty>
+            ) : (
+              <Row gutter={[16, 16]}>
+                {filteredCourts.map(c => (
+                  <Col xs={24} sm={12} lg={8} xl={6} key={c.ma_san}>
+                    <Card
+                      hoverable
+                      className="shadow-sm"
+                      cover={
+                        <div style={{ height: 180, overflow: 'hidden' }}>
+                          <Image
+                            src={c.anh_san ? c.anh_san.split(',')[0] : "/assets/img/bg1.jpg"}
+                            alt={c.ten_san}
+                            style={{ width: '100%', height: 180, objectFit: 'cover' }}
+                            fallback="/assets/img/bg1.jpg"
+                            preview={false}
+                          />
+                        </div>
+                      }
+                      actions={[
+                        <Button type="text" icon={<EyeOutlined />} onClick={() => navigate(`/owner/courts/${c.ma_san}`)}>Chi tiết</Button>,
+                        <Button type="text" icon={<EditOutlined />} onClick={() => navigate(`/owner/courts/${c.ma_san}/edit`)}>Sửa</Button>,
+                      ]}
+                    >
+                      <Meta
+                        title={
+                          <div className="flex items-center justify-between">
+                            <Text strong ellipsis style={{ maxWidth: '70%' }}>{c.ten_san}</Text>
+                            <Tag color={c.trang_thai === 'hoat_dong' ? 'success' : 'default'}>
+                              {c.trang_thai === 'hoat_dong' ? 'Hoạt động' : 'Tạm ngưng'}
+                            </Tag>
+                          </div>
+                        }
+                        description={
+                          <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                            <div className="flex items-start gap-1">
+                              <EnvironmentOutlined style={{ color: '#9CA3AF', marginTop: 3 }} />
+                              <Paragraph ellipsis={{ rows: 2 }} style={{ margin: 0, color: '#6B7280', fontSize: 13 }}>
+                                {c.dia_chi}
+                              </Paragraph>
+                            </div>
+                            <Text strong style={{ color: '#059669' }}>
+                              {Number(c.gia_thue || 0).toLocaleString('de-DE')} đ/giờ
+                            </Text>
+                          </Space>
+                        }
+                      />
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
             )}
-          </div>
-        )}
-      </div>
+          </Spin>
+        </Card>
+      </Space>
     </OwnerLayout>
   );
 }

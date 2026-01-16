@@ -149,8 +149,8 @@ export default function TimeSlotsAdmin() {
             newSlots[idx].phu_phi = val;
             setSlots(newSlots);
           }}
-          formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-          parser={value => value.replace(/\$\s?|(,*)/g, '')}
+          formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+          parser={value => value.replace(/\./g, '')}
           size="small"
         />
       )
@@ -165,7 +165,7 @@ export default function TimeSlotsAdmin() {
       dataIndex: 'phi_ngay_le', 
       key: 'phi_ngay_le', 
       align: 'right',
-      render: (val) => <Text style={{ color: '#059669' }}>{Number(val || 0).toLocaleString('vi-VN')} đ</Text>
+      render: (val) => <Text style={{ color: '#059669' }}>{Number(val || 0).toLocaleString('de-DE')} đ</Text>
     },
   ];
 
@@ -235,8 +235,8 @@ export default function TimeSlotsAdmin() {
                       newSurcharges[i].phi_thu = val;
                       setWeekSurcharges(newSurcharges);
                     }}
-                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value.replace(/\$\s?|(,*)/g, '')}
+                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                    parser={value => value.replace(/\./g, '')}
                     placeholder="0"
                   />
                 </Card>

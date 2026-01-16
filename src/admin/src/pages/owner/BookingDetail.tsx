@@ -3,14 +3,44 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import OwnerLayout from "../../layouts/OwnerLayout";
+import {
+  Card,
+  Row,
+  Col,
+  Typography,
+  Space,
+  Tag,
+  Table,
+  Button,
+  Spin,
+  Descriptions,
+  message,
+  Modal,
+  Result
+} from 'antd';
+import {
+  ArrowLeftOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
+  DollarOutlined,
+  ExclamationCircleOutlined
+} from "@ant-design/icons";
+import dayjs from "dayjs";
+
+const { Title, Text } = Typography;
+
+const COLORS = {
+  success: '#059669',
+  warning: '#D97706',
+  danger: '#EF4444',
+};
 
 export default function BookingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [paymentType, setPaymentType] = useState("dat_coc");
-  const [paymentLoading, setPaymentLoading] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -19,12 +49,12 @@ export default function BookingDetail() {
       if (res.data.success) {
         setBooking(res.data);
       } else {
-        alert(res.data.message || "Không thể tải đơn");
+        message.error(res.data.message || "Không thể tải đơn");
         navigate("/owner/orders/count");
       }
     } catch (e) {
       console.error(e);
-      alert("Lỗi khi tải chi tiết đơn");
+      message.error("Lỗi khi tải chi tiết đơn");
       navigate("/owner/orders/count");
     } finally {
       setLoading(false);
@@ -32,52 +62,58 @@ export default function BookingDetail() {
   }
 
   async function handleCancel() {
-    if (!confirm("Bạn có chắc muốn hủy đơn này?")) return;
-    try {
-      const res = await api.put(`/bookings/${id}/cancel`);
-      if (res.data.success) {
-        alert("Hủy đơn thành công");
-        load(); // Reload
-      } else {
-        alert(res.data.message || "Không thể hủy đơn");
+    Modal.confirm({
+      title: 'Xác nhận hủy đơn',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Bạn có chắc chắn muốn hủy đơn đặt sân này?',
+      okText: 'Hủy đơn',
+      okType: 'danger',
+      cancelText: 'Không',
+      onOk: async () => {
+        try {
+          const res = await api.put(`/bookings/${id}/cancel`);
+          if (res.data.success) {
+            message.success("Hủy đơn thành công");
+            load();
+          } else {
+            message.error(res.data.message || "Không thể hủy đơn");
+          }
+        } catch (e) {
+          console.error(e);
+          message.error("Lỗi khi hủy đơn");
+        }
       }
-    } catch (e) {
-      console.error(e);
-      alert("Lỗi khi hủy đơn");
-    }
+    });
   }
 
-  async function handleVNPayPayment() {
-    setPaymentLoading(true);
-    try {
-      const res = await api.post("/payment/vnpay/create", {
-        ma_don: parseInt(id),
-        loai_giao_dich: paymentType,
-      });
+  useEffect(() => { load(); }, [id]);
 
-      if (res.data.success && res.data.paymentUrl) {
-        // Redirect to VNPay payment URL
-        window.location.href = res.data.paymentUrl;
-      } else {
-        alert(res.data.message || "Không thể tạo thanh toán VNPay");
-      }
-    } catch (e) {
-      console.error(e);
-      alert(e.response?.data?.message || "Lỗi khi tạo thanh toán VNPay");
-    } finally {
-      setPaymentLoading(false);
-    }
-  }
+  const getStatusConfig = (status) => {
+    const configs = {
+      'tam_giu': { color: 'warning', icon: <ClockCircleOutlined />, text: 'Tạm giữ' },
+      'da_coc': { color: 'processing', icon: <DollarOutlined />, text: 'Đã đặt cọc' },
+      'da_xac_nhan': { color: 'blue', icon: <CheckCircleOutlined />, text: 'Đã xác nhận' },
+      'dang_su_dung': { color: 'cyan', icon: <ClockCircleOutlined />, text: 'Đang sử dụng' },
+      'hoan_thanh': { color: 'success', icon: <CheckCircleOutlined />, text: 'Hoàn thành' },
+      'da_huy': { color: 'error', icon: <CloseCircleOutlined />, text: 'Đã hủy' },
+    };
+    return configs[status] || { color: 'default', icon: null, text: status };
+  };
 
-  useEffect(() => {
-    load();
-  }, [id]);
+  const getPaymentMethodText = (method) => {
+    const methods = {
+      'chuyen_khoan': 'Chuyển khoản',
+      'tien_mat': 'Tiền mặt',
+      'vnpay': 'VNPay',
+    };
+    return methods[method] || method || 'Chưa xác định';
+  };
 
   if (loading) {
     return (
       <OwnerLayout>
-        <div className="container-fluid py-4">
-          <div>Đang tải...</div>
+        <div className="flex items-center justify-center" style={{ minHeight: 400 }}>
+          <Spin size="large" />
         </div>
       </OwnerLayout>
     );
@@ -86,186 +122,70 @@ export default function BookingDetail() {
   if (!booking || !booking.don) {
     return (
       <OwnerLayout>
-        <div className="container-fluid py-4">
-          <div>Không tìm thấy đơn</div>
-        </div>
+        <Result status="404" title="Không tìm thấy đơn" subTitle="Đơn đặt sân không tồn tại hoặc đã bị xóa" extra={<Button type="primary" onClick={() => navigate("/owner/orders/count")}>Quay lại</Button>} />
       </OwnerLayout>
     );
   }
 
   const { don, chi_tiet } = booking;
+  const statusConfig = getStatusConfig(don.trang_thai_don);
+
+  const columns = [
+    { title: 'Mã chi tiết', dataIndex: 'ma_chi_tiet', key: 'ma_chi_tiet', render: (val) => <Text strong>#{val}</Text> },
+    { title: 'Sân con', dataIndex: 'ma_san_con', key: 'ma_san_con', render: (val) => `Sân #${val}` },
+    { title: 'Khung giờ', dataIndex: 'ma_khung_gio', key: 'ma_khung_gio', render: (val) => `Khung #${val}` },
+    { title: 'Ngày đặt', dataIndex: 'ngay_dat_san', key: 'ngay_dat_san', render: (val) => dayjs(val).format('DD/MM/YYYY') },
+    { title: 'Đơn giá', dataIndex: 'don_gia', key: 'don_gia', align: 'right', render: (val) => <Text strong style={{ color: COLORS.success }}>{Number(val || 0).toLocaleString('de-DE')} đ</Text> },
+  ];
 
   return (
     <OwnerLayout>
-      <div className="container-fluid py-4">
-        <div className="row">
-          <div className="col-12">
-            <div className="card">
-              <div className="card-header pb-0">
-                <div className="d-flex align-items-center justify-content-between">
-                  <h6>Chi tiết đơn đặt sân #{don.ma_don}</h6>
-                  <button 
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={() => navigate("/owner/orders/count")}
-                  >
-                    Quay lại
-                  </button>
-                </div>
-              </div>
-              <div className="card-body">
-                {/* Thông tin đơn */}
-                <div className="row mb-4">
-                  <div className="col-md-6">
-                    <h6 className="text-sm">Thông tin đơn hàng</h6>
-                    <p className="text-sm mb-1">
-                      <strong>Mã đơn:</strong> {don.ma_don}
-                    </p>
-                    <p className="text-sm mb-1">
-                      <strong>Trạng thái:</strong>{" "}
-                      <span className={`badge ${
-                        don.trang_thai_don === "da_huy" ? "bg-danger" :
-                        don.trang_thai_don === "tam_giu" ? "bg-warning" :
-                        don.trang_thai_don === "da_xac_nhan" ? "bg-success" :
-                        "bg-secondary"
-                      }`}>
-                        {don.trang_thai_don === "tam_giu" ? "Tạm giữ" :
-                         don.trang_thai_don === "da_xac_nhan" ? "Đã xác nhận" :
-                         don.trang_thai_don === "da_huy" ? "Đã hủy" :
-                         don.trang_thai_don}
-                      </span>
-                    </p>
-                    <p className="text-sm mb-1">
-                      <strong>Tổng tiền:</strong> {Number(don.tong_tien || 0).toLocaleString('vi-VN')} VNĐ
-                    </p>
-                    <p className="text-sm mb-1">
-                      <strong>Đã thanh toán:</strong> {Number(don.da_thanh_toan || 0).toLocaleString('vi-VN')} VNĐ
-                    </p>
-                    <p className="text-sm mb-1">
-                      <strong>Hình thức thanh toán:</strong> {don.hinh_thuc_thanh_toan || "Chưa xác định"}
-                    </p>
-                    <p className="text-sm mb-1">
-                      <strong>Thời điểm tạo:</strong> {new Date(don.thoi_diem_tao).toLocaleString("vi-VN")}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Chi tiết đặt sân */}
-                <div className="row">
-                  <div className="col-12">
-                    <h6 className="text-sm mb-3">Chi tiết đặt sân</h6>
-                    <div className="table-responsive">
-                      <table className="table table-sm align-items-center mb-0">
-                        <thead>
-                          <tr>
-                            <th className="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                              Sân con
-                            </th>
-                            <th className="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                              Khung giờ
-                            </th>
-                            <th className="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                              Ngày đặt
-                            </th>
-                            <th className="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                              Đơn giá
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {chi_tiet && chi_tiet.length > 0 ? (
-                            chi_tiet.map((ct, idx) => (
-                              <tr key={idx}>
-                                <td>
-                                  <p className="text-xs font-weight-bold mb-0">
-                                    Sân con #{ct.ma_san_con}
-                                  </p>
-                                </td>
-                                <td>
-                                  <p className="text-xs font-weight-bold mb-0">
-                                    Khung #{ct.ma_khung_gio}
-                                  </p>
-                                </td>
-                                <td>
-                                  <p className="text-xs font-weight-bold mb-0">
-                                    {ct.ngay_dat_san}
-                                  </p>
-                                </td>
-                                <td>
-                                  <p className="text-xs font-weight-bold mb-0">
-                                    {Number(ct.don_gia || 0).toLocaleString('vi-VN')} VNĐ
-                                  </p>
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan="4" className="text-center">
-                                Không có chi tiết
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                {don.trang_thai_don !== "da_huy" && (
-                  <div className="row mt-4">
-                    <div className="col-12">
-                      {/* VNPay Payment Section */}
-                      {(don.trang_thai_don === "tam_giu" || don.trang_thai_don === "da_coc") && (
-                        <div className="card mb-3">
-                          <div className="card-body">
-                            <h6 className="text-sm mb-3">Thanh toán VNPay</h6>
-                            
-                            {/* Payment Type Selector */}
-                            <div className="mb-3">
-                              <label className="form-label text-sm">Loại thanh toán</label>
-                              <select 
-                                className="form-select form-select-sm"
-                                value={paymentType}
-                                onChange={(e) => setPaymentType(e.target.value)}
-                                disabled={paymentLoading}
-                              >
-                                <option value="dat_coc">Đặt cọc (30%)</option>
-                                <option value="thanh_toan">Thanh toán đầy đủ</option>
-                              </select>
-                              <small className="text-muted">
-                                {paymentType === "dat_coc" 
-                                  ? `Số tiền đặt cọc: ${(Number(don.tong_tien || 0) * 0.3).toLocaleString('vi-VN')} VNĐ`
-                                  : `Số tiền cần thanh toán: ${(Number(don.tong_tien || 0) - Number(don.da_thanh_toan || 0)).toLocaleString('vi-VN')} VNĐ`
-                                }
-                              </small>
-                            </div>
-
-                            {/* Payment Button */}
-                            <button 
-                              className="btn btn-primary btn-sm"
-                              onClick={handleVNPayPayment}
-                              disabled={paymentLoading}
-                            >
-                              {paymentLoading ? "Đang xử lý..." : "Thanh toán VNPay"}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      <button 
-                        className="btn btn-danger btn-sm"
-                        onClick={handleCancel}
-                      >
-                        Hủy đơn
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <Title level={4} style={{ margin: 0 }}>Chi tiết đơn #{don.ma_don}</Title>
+            <Text type="secondary">Xem thông tin chi tiết đơn đặt sân</Text>
           </div>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/owner/orders/count")}>Quay lại</Button>
         </div>
-      </div>
+
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={18}>
+            <Card title="Thông tin đơn hàng" bordered={false} size="small">
+              <Descriptions column={{ xs: 1, sm: 2 }} size="small" bordered>
+                <Descriptions.Item label="Mã đơn">#{don.ma_don}</Descriptions.Item>
+                <Descriptions.Item label="Trạng thái"><Tag color={statusConfig.color} icon={statusConfig.icon}>{statusConfig.text}</Tag></Descriptions.Item>
+                <Descriptions.Item label="Mã người dùng">#{don.ma_nguoi_dung}</Descriptions.Item>
+                <Descriptions.Item label="Thời điểm tạo">{dayjs(don.thoi_diem_tao).format('DD/MM/YYYY HH:mm')}</Descriptions.Item>
+                <Descriptions.Item label="Hình thức TT">{getPaymentMethodText(don.hinh_thuc_thanh_toan)}</Descriptions.Item>
+                <Descriptions.Item label="Tổng tiền"><Text strong>{Number(don.tong_tien || 0).toLocaleString('de-DE')} đ</Text></Descriptions.Item>
+                <Descriptions.Item label="Đã thanh toán">{Number(don.da_thanh_toan || 0).toLocaleString('de-DE')} đ</Descriptions.Item>
+                <Descriptions.Item label="Còn lại"><Text type="danger">{(Number(don.tong_tien || 0) - Number(don.da_thanh_toan || 0)).toLocaleString('de-DE')} đ</Text></Descriptions.Item>
+              </Descriptions>
+            </Card>
+
+            <Card title="Chi tiết đặt sân" bordered={false} size="small" style={{ marginTop: 16 }}>
+              <Table 
+                columns={columns} 
+                dataSource={chi_tiet || []} 
+                pagination={false} 
+                rowKey="ma_chi_tiet" 
+                size="small" 
+                bordered
+                locale={{ emptyText: 'Không có chi tiết' }}
+              />
+            </Card>
+          </Col>
+
+          <Col xs={24} lg={6}>
+            {don.trang_thai_don !== "da_huy" && don.trang_thai_don !== "hoan_thanh" && (
+              <Card bordered={false} size="small">
+                <Button danger block onClick={handleCancel}>Hủy đơn</Button>
+              </Card>
+            )}
+          </Col>
+        </Row>
+      </Space>
     </OwnerLayout>
   );
 }

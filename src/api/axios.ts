@@ -25,7 +25,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    const requestUrl = error.config?.url || '';
+    
+    // Không xử lý 401 cho các endpoint auth (login, register, etc.)
+    const isAuthEndpoint = requestUrl.includes('/api/auth/');
+    
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       // Token invalid or expired - logout and redirect to login
       useAuthStore.getState().logout();
       window.location.href = '/login';
