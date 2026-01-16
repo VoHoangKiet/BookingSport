@@ -6,6 +6,20 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        admin: {
+          primary: '#059669',
+          secondary: '#6B7280',
+          success: '#059669',
+          warning: '#D97706',
+          danger: '#DC2626',
+          bg: '#F9FAFB',
+          surface: '#FFFFFF',
+          border: '#E5E7EB',
+          text: '#111827',
+          muted: '#6B7280'
+        }
+      },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out forwards',
         'bounce-delay-0': 'bounce 1s ease-in-out infinite',

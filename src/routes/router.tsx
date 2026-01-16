@@ -104,35 +104,35 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      // ########
-      {
-        path: "admin",
-        element: <PrivateRoute role="admin" />,
-        children: [
-          { index: true, element: <AdminDashboard /> },
-          { path: "users", element: <AdminUsers /> },
-          { path: "configs/time-slots", element: <AdminTimeSlots /> },
-          { path: "sports", element: <AdminSports /> },
-        ],
-      },
-      {
-        path: "owner",
-        element: <PrivateRoute role="chu_san" />,
-        children: [
-          { index: true, element: <OwnerDashboard /> },
-          { path: "courts/my", element: <OwerMyCourts /> },
-          { path: "courts/new", element: <CourtForm /> },
-          { path: "courts/edit/:id", element: <CourtForm /> },
-          { path: "courts/:id", element: <CourtDetail /> },
-          { path: "orders/count", element: <OwnerBookings /> },
-          { path: "dat-san/:id", element: <BookingDetail /> },
-          { path: "payment/result", element: <PaymentResult /> },
-        ],
-      },
       {
         path: "auth/success",
         element: <AuthSuccess />
       }
+    ],
+  },
+  // Separate flows for Admin and Owner to avoid double headers
+  {
+    path: "admin",
+    element: <PrivateRoute role="admin" />,
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: "users", element: <AdminUsers /> },
+      { path: "configs/time-slots", element: <AdminTimeSlots /> },
+      { path: "sports", element: <AdminSports /> },
+    ],
+  },
+  {
+    path: "owner",
+    element: <PrivateRoute role="chu_san" />,
+    children: [
+      { index: true, element: <OwnerDashboard /> },
+      { path: "courts/my", element: <OwerMyCourts /> },
+      { path: "courts/new", element: <CourtForm /> },
+      { path: "courts/edit/:id", element: <CourtForm /> },
+      { path: "courts/:id", element: <CourtDetail /> },
+      { path: "orders/count", element: <OwnerBookings /> },
+      { path: "dat-san/:id", element: <BookingDetail /> },
+      { path: "payment/result", element: <PaymentResult /> },
     ],
   },
 ]);
