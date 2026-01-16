@@ -19,15 +19,16 @@ import badmintonIcon from '@/assets/badminton-icon.png';
 import footballIcon from '@/assets/football-icon.png';
 import tableTennisIcon from '@/assets/tabletennis-icon.png';
 import tennisIcon from '@/assets/tennis-icon.png';
-
+import pickleball from '@/assets/pickleball.png'
 // Sport icon mapping
 const sportIcons: Record<string, React.ReactNode> = {
-  default: <Dribbble className="w-8 h-8" />,
-  'Bóng đá': <img src={footballIcon} alt="Bóng đá" className="w-10 h-10 object-contain" />,
+  default: <Trophy className="w-8 h-8" />,
+  'Đá bóng': <img src={footballIcon} alt="Đá bóng" className="w-10 h-10 object-contain" />,
   'Tennis': <img src={tennisIcon} alt="Tennis" className="w-10 h-10 object-contain" />,
   'Cầu lông': <img src={badmintonIcon} alt="Cầu lông" className="w-10 h-10 object-contain" />,
   'Bóng bàn': <img src={tableTennisIcon} alt="Bóng bàn" className="w-10 h-10 object-contain" />,
-  'Bóng rổ': <Trophy className="w-8 h-8" />,
+  'Bóng rổ': <Dribbble className="w-8 h-8" />,
+  'Pickleball': <img src={pickleball} alt="Pickleball" className="w-10 h-10 object-contain"  />,
   'Bóng chuyền': <Volleyball className="w-8 h-8" />,
 };
 
@@ -119,8 +120,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">Sân chơi nổi bật</h2>
-              <p className="text-sm text-gray-500 mt-1">Những địa điểm được cộng đồng đánh giá cao nhất</p>
+              <h2 className="text-3xl font-bold text-gray-900">Sân chất - Đặt là có</h2>
+              <p className="text-sm text-gray-500 mt-1">Khám phá những sân thể thao chất lượng và tiện nghi</p>
             </div>
             <Link to={ROUTES.COURTS}>
               <button className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-2 border-b-2 border-emerald-100 hover:border-emerald-600 transition-all pb-1">

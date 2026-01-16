@@ -5,12 +5,7 @@ import { courtsApi, bookingsApi, paymentApi } from '@/api';
 import { Button, Skeleton } from '@/components/ui';
 import { formatCurrency, formatTime, formatDateToISO } from '@/lib/utils';
 import type { TimeSlot, PaymentMethod, SubCourt } from '@/types';
-import { useMultiSubCourtBooking } from '@/hooks/useMultiSubCourtBooking';
-import { 
-  Frown, ChevronLeft, ChevronRight, Calendar as CalendarIcon, 
-  Clock, MapPin, CreditCard, Banknote, Sun, CloudSun, Moon,
-  Check, ChevronDown, AlertTriangle, X
-} from 'lucide-react';
+import { Frown, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, CreditCard, Banknote, Sun, CloudSun, Moon } from 'lucide-react';
 
 export default function BookingPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,30 +25,17 @@ export default function BookingPage() {
 
   const [viewDate, setViewDate] = useState(() => {
     const d = new Date(selectedDate);
+    // Ensure we parse as local date if it's YYYY-MM-DD
     if (selectedDate.includes('-') && !selectedDate.includes('T')) {
       const [y, m, day] = selectedDate.split('-').map(Number);
       return new Date(y, m - 1, day);
     }
     return d;
   });
-
+  const [selectedSubCourt, setSelectedSubCourt] = useState<number | null>(null);
+  const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('chuyen_khoan');
   const [paymentType, setPaymentType] = useState<'dat_coc' | 'thanh_toan'>('thanh_toan');
-  const [slotsLoadedAt, setSlotsLoadedAt] = useState<string>();
-  const [expandedSubCourts, setExpandedSubCourts] = useState<Set<number>>(new Set());
-
-  // Use custom hook for multi-subcourt selection
-  const {
-    selections,
-    toggleSubCourt,
-    toggleSlot,
-    removeSubCourt,
-    isSubCourtSelected,
-    isSlotSelected,
-    totalPrice,
-    totalSlotsCount,
-    isValid,
-  } = useMultiSubCourtBooking();
 
   const { data: court, isLoading: courtLoading } = useQuery({
     queryKey: ['court', id],
@@ -61,67 +43,40 @@ export default function BookingPage() {
     enabled: !!id,
   });
 
-  const { data: availableSubCourts, isLoading: slotsLoading, refetch: refetchSlots } = useQuery({
+  const { data: availableSubCourts, isLoading: slotsLoading } = useQuery({
     queryKey: ['available-slots', id, selectedDate],
-    queryFn: async () => {
-      const data = await bookingsApi.getAvailableSlots(Number(id), selectedDate);
-      setSlotsLoadedAt(new Date().toISOString());
-      return data;
-    },
+    queryFn: () => bookingsApi.getAvailableSlots(Number(id), selectedDate),
     enabled: !!id && !!selectedDate,
-    refetchInterval: 30000, // Auto-refresh every 30s
-    refetchIntervalInBackground: false,
   });
 
-  // Check if data is stale
-  const isDataStale = useMemo(() => {
-    if (!slotsLoadedAt) return false;
-    const loadedTime = new Date(slotsLoadedAt).getTime();
-    const now = new Date().getTime();
-    const minutesOld = (now - loadedTime) / 1000 / 60;
-    return minutesOld > 2;
-  }, [slotsLoadedAt]);
+  const currentSubCourt = availableSubCourts?.find((s) => s.ma_san_con === selectedSubCourt);
+  const currentSlots = useMemo(() => {
+    return [...(currentSubCourt?.available_slots || [])].sort((a, b) => 
+      a.gio_bat_dau.localeCompare(b.gio_bat_dau)
+    );
+  }, [currentSubCourt]);
 
-  // Group slots by time period
-  const groupSlotsByPeriod = (slots: TimeSlot[]) => {
-    const sorted = [...slots].sort((a, b) => a.gio_bat_dau.localeCompare(b.gio_bat_dau));
+  const groupedSlots = useMemo(() => {
+    if (!currentSlots.length) return { morning: [], afternoon: [], evening: [] };
+    
     return {
-      morning: sorted.filter(s => {
+      morning: currentSlots.filter(s => {
         const h = parseInt(s.gio_bat_dau.split(':')[0]);
         return h >= 6 && h <= 11;
       }),
-      afternoon: sorted.filter(s => {
+      afternoon: currentSlots.filter(s => {
         const h = parseInt(s.gio_bat_dau.split(':')[0]);
         return h >= 12 && h <= 17;
       }),
-      evening: sorted.filter(s => {
+      evening: currentSlots.filter(s => {
         const h = parseInt(s.gio_bat_dau.split(':')[0]);
         return h >= 18 && h <= 22;
       })
     };
-  };
+  }, [currentSlots]);
 
   const createBookingMutation = useMutation({
-    mutationFn: async () => {
-      const bookings = selections.map(selection => ({
-        ma_san_con: selection.ma_san_con,
-        ngay_dat_san: selectedDate,
-        khung_gios: selection.selected_slots.map(s => s.ma_khung_gio),
-      }));
-
-      return bookingsApi.createMulti({
-        bookings,
-        hinh_thuc_thanh_toan: paymentMethod,
-        slots_loaded_at: slotsLoadedAt,
-      });
-    },
-    retry: (failureCount, error: any) => {
-      if (error.response?.status === 409 && failureCount < 2) {
-        refetchSlots();
-        return true;
-      }
-      return false;
-    },
+    mutationFn: bookingsApi.create,
     onSuccess: async (data: unknown) => {
       const response = data as Record<string, unknown>;
       const booking = (response.don || response) as Record<string, unknown>;
@@ -137,33 +92,37 @@ export default function BookingPage() {
         navigate(`/bookings/${ma_don}`);
       }
     },
-    onError: (error: any) => {
-      if (error.response?.status === 409) {
-        alert('Một số khung giờ đã được đặt bởi người khác. Vui lòng chọn lại.');
-        refetchSlots();
-      }
-    },
   });
 
+  const handleSlotToggle = (slotId: number) => {
+    setSelectedSlots((prev) =>
+      prev.includes(slotId)
+        ? prev.filter((id) => id !== slotId)
+        : [...prev, slotId].sort((a, b) => a - b)
+    );
+  };
+
+  const calculateTotal = () => {
+    if (!currentSubCourt || !selectedSlots.length) return 0;
+    return selectedSlots.reduce((total, slotId) => {
+      const slot = currentSlots.find((s) => s.ma_khung_gio === slotId);
+      return total + currentSubCourt.gia_co_ban + (slot?.phu_phi || 0);
+    }, 0);
+  };
+
   const calculatePayNow = () => {
+    const total = calculateTotal();
     if (paymentMethod === 'tien_mat') return 0;
-    return paymentType === 'dat_coc' ? totalPrice * 0.3 : totalPrice;
+    return paymentType === 'dat_coc' ? total * 0.3 : total;
   };
 
   const handleSubmit = () => {
-    if (!isValid) return;
-    createBookingMutation.mutate();
-  };
-
-  const toggleExpanded = (ma_san_con: number) => {
-    setExpandedSubCourts(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(ma_san_con)) {
-        newSet.delete(ma_san_con);
-      } else {
-        newSet.add(ma_san_con);
-      }
-      return newSet;
+    if (!selectedSubCourt || selectedSlots.length === 0) return;
+    createBookingMutation.mutate({
+      ma_san_con: selectedSubCourt,
+      ngay_dat_san: selectedDate,
+      khung_gios: selectedSlots,
+      hinh_thuc_thanh_toan: paymentMethod,
     });
   };
 
@@ -176,26 +135,19 @@ export default function BookingPage() {
     const startPadding = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
     const days = [];
     const prevMonthLastDay = new Date(year, month, 0).getDate();
-    
     for (let i = startPadding - 1; i >= 0; i--) {
       days.push({ day: prevMonthLastDay - i, month: month - 1, year, isCurrentMonth: false, disabled: true });
     }
-    
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i);
       const dateStr = formatDateToISO(date);
       const isPast = date < today;
-      days.push({ 
-        day: i, month, year, isCurrentMonth: true, disabled: isPast, 
-        value: dateStr, isToday: date.getTime() === today.getTime() 
-      });
+      days.push({ day: i, month, year, isCurrentMonth: true, disabled: isPast, value: dateStr, isToday: date.getTime() === today.getTime() });
     }
-    
     const remainingSlots = 42 - days.length;
     for (let i = 1; i <= remainingSlots; i++) {
       days.push({ day: i, month: month + 1, year, isCurrentMonth: false, disabled: true });
     }
-    
     return days;
   }, [viewDate, today]);
 
@@ -257,27 +209,6 @@ export default function BookingPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {/* Stale Data Warning */}
-        {isDataStale && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-bold text-amber-900">Dữ liệu có thể đã cũ</p>
-                <p className="text-xs text-amber-700 mt-1">
-                  Khung giờ được tải {Math.floor((new Date().getTime() - new Date(slotsLoadedAt!).getTime()) / 1000 / 60)} phút trước.
-                  <button 
-                    onClick={() => refetchSlots()} 
-                    className="ml-2 underline font-bold hover:text-amber-900"
-                  >
-                    Làm mới ngay
-                  </button>
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Main Content Column */}
@@ -317,23 +248,23 @@ export default function BookingPage() {
                       <button
                         key={`${date.year}-${date.month}-${date.day}-${idx}`}
                         disabled={date.disabled}
-                        onClick={() => date.value && setSelectedDate(date.value)}
+                        onClick={() => date.value && (setSelectedDate(date.value), setSelectedSlots([]))}
                         className={`
                           relative h-14 md:h-16 flex flex-col items-center justify-center transition-all group focus:outline-none
                           ${!date.isCurrentMonth ? 'bg-white opacity-20 text-gray-200' : ''}
                           ${date.disabled && date.isCurrentMonth ? 'bg-gray-50 text-gray-300 cursor-not-allowed' : 'cursor-pointer'}
                           ${isSelected 
-                            ? 'bg-emerald-600 z-10 font-bold hover:bg-emerald-700' 
+                            ? 'bg-emerald-600 z-10 font-bold hover:bg-white' 
                             : !date.disabled && date.isCurrentMonth 
                               ? date.isToday 
-                                ? 'bg-white ring-1 ring-inset ring-emerald-600 hover:bg-emerald-50' 
+                                ? 'bg-white ring-1 ring-inset ring-emerald-600 hover:bg-emerald-600' 
                                 : 'bg-white hover:bg-gray-50'
                               : ''}
                         `}
                       >
                         <span className={`text-base transition-colors duration-200
-                          ${isSelected ? 'text-white' : ''}
-                          ${!isSelected && date.isToday ? 'text-emerald-600' : ''}
+                          ${isSelected ? 'text-white group-hover:text-emerald-600' : ''}
+                          ${!isSelected && date.isToday ? 'text-emerald-600 group-hover:text-white' : ''}
                           ${!isSelected && !date.isToday ? 'text-gray-900' : ''}
                           ${date.disabled ? 'text-gray-300' : ''}
                         `}>
@@ -353,18 +284,11 @@ export default function BookingPage() {
               </div>
             </div>
 
-            {/* 2. SUB-COURT SELECTION */}
+            {/* 2. SUB-COURT SECTION */}
             <div className={`bg-white border border-gray-200 rounded-lg overflow-hidden ${!selectedDate ? 'opacity-50 pointer-events-none' : ''}`}>
-              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-emerald-600" />
-                  <h2 className="text-sm font-bold text-gray-800">Chọn khu vực sân</h2>
-                </div>
-                {selections.length > 0 && (
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
-                    Đã chọn {selections.length} sân
-                  </span>
-                )}
+              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-sm font-bold text-gray-800">Chọn khu vực sân</h2>
               </div>
               
               <div className="p-6">
@@ -374,51 +298,24 @@ export default function BookingPage() {
                   </div>
                 ) : availableSubCourts && availableSubCourts.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {availableSubCourts.map((sub: SubCourt) => {
-                      const isSelected = isSubCourtSelected(sub.ma_san_con);
-                      const selectedCount = selections.find(
-                        s => s.ma_san_con === sub.ma_san_con
-                      )?.selected_slots.length || 0;
-                      
-                      return (
-                        <button
-                          key={sub.ma_san_con}
-                          onClick={() => toggleSubCourt(sub)}
-                          className={`
-                            p-4 rounded-md border text-left transition-all relative
-                            ${isSelected 
-                              ? 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-600' 
-                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
-                          `}
-                        >
-                          {/* Checkbox */}
-                          <div className="absolute top-3 right-3">
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all
-                              ${isSelected ? 'bg-emerald-600 border-emerald-600' : 'border-gray-300'}`}>
-                              {isSelected && <Check className="w-3 h-3 text-white" />}
-                            </div>
-                          </div>
-                          
-                          <div className="flex justify-between items-center mb-1 pr-8">
-                            <span className="text-sm font-bold">{sub.ten_san_con}</span>
-                            <span className="text-xs text-gray-400 font-medium">
-                              {sub.available_slots?.length || 0} giờ trống
-                            </span>
-                          </div>
-                          
-                          <div className="text-emerald-600 font-bold text-sm tracking-tight">
-                            {formatCurrency(sub.gia_co_ban)}
-                            <span className="text-[10px] text-gray-400 font-normal"> /h</span>
-                          </div>
-                          
-                          {selectedCount > 0 && (
-                            <div className="mt-2 text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded inline-block">
-                              Đã chọn {selectedCount} giờ
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
+                    {availableSubCourts.map((sub: SubCourt) => (
+                      <button
+                        key={sub.ma_san_con}
+                        onClick={() => { setSelectedSubCourt(sub.ma_san_con); setSelectedSlots([]); }}
+                        className={`
+                          p-4 rounded-md border text-left transition-all
+                          ${selectedSubCourt === sub.ma_san_con 
+                            ? 'border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600' 
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
+                        `}
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-sm font-bold">{sub.ten_san_con}</span>
+                          <span className="text-xs text-gray-400 font-medium">{sub.available_slots?.length || 0} giờ trống</span>
+                        </div>
+                        <div className="text-emerald-600 font-bold text-sm tracking-tight">{formatCurrency(sub.gia_co_ban)}<span className="text-[10px] text-gray-400 font-normal"> /h</span></div>
+                      </button>
+                    ))}
                   </div>
                 ) : (
                   <div className="py-8 text-center border-2 border-dashed border-gray-100 rounded-md">
@@ -428,97 +325,80 @@ export default function BookingPage() {
               </div>
             </div>
 
-            {/* 3. TIME SLOT SELECTION - Collapsible for each selected sub-court */}
-            {selections.map((selection) => {
-              const subCourt = availableSubCourts?.find(
-                s => s.ma_san_con === selection.ma_san_con
-              );
-              if (!subCourt) return null;
-              
-              const isExpanded = expandedSubCourts.has(selection.ma_san_con);
-              const groupedSlots = groupSlotsByPeriod(subCourt.available_slots || []);
-              
-              return (
-                <div key={selection.ma_san_con} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  {/* Header - Collapsible */}
-                  <button
-                    onClick={() => toggleExpanded(selection.ma_san_con)}
-                    className="w-full px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Clock className="w-5 h-5 text-emerald-600" />
-                      <h3 className="text-sm font-bold text-gray-800">
-                        Chọn giờ - {selection.ten_san_con}
-                      </h3>
-                      {selection.selected_slots.length > 0 && (
-                        <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
-                          {selection.selected_slots.length} khung giờ
-                        </span>
-                      )}
-                    </div>
-                    <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                  </button>
-                  
-                  {/* Body - Time slots */}
-                  {isExpanded && (
-                    <div className="p-6">
-                      {(subCourt.available_slots?.length || 0) > 0 ? (
-                        <div className="space-y-8">
-                          {[
-                            { id: 'morning', label: 'Sáng', range: '06:00 - 11:30', icon: Sun, slots: groupedSlots.morning, color: 'text-amber-600' },
-                            { id: 'afternoon', label: 'Chiều', range: '12:00 - 17:30', icon: CloudSun, slots: groupedSlots.afternoon, color: 'text-orange-500' },
-                            { id: 'evening', label: 'Tối', range: '18:00 - 22:00', icon: Moon, slots: groupedSlots.evening, color: 'text-blue-600' },
-                          ].map((group) => group.slots.length > 0 && (
-                            <div key={group.id} className="space-y-3">
-                              <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-gray-100 border text-gray-700">
-                                <group.icon className={`w-3.5 h-3.5 ${group.color}`} />
-                                <span className="text-xs font-bold text-gray-700">{group.label}</span>
-                                <span className="text-[10px] text-gray-400 font-medium ml-auto">Khung giờ {group.range}</span>
-                              </div>
-                              
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 border-t border-l border-gray-100">
-                                {group.slots.map((slot: TimeSlot) => {
-                                  const isActive = isSlotSelected(selection.ma_san_con, slot.ma_khung_gio);
-                                  return (
-                                    <button
-                                      key={slot.ma_khung_gio}
-                                      onClick={() => !slot.da_dat && toggleSlot(selection.ma_san_con, slot, subCourt.gia_co_ban)}
-                                      disabled={slot.da_dat}
-                                      className={`
-                                        relative h-12 border-r border-b border-gray-100 flex flex-col items-center justify-center transition-all group
-                                        ${slot.da_dat
-                                          ? 'bg-gray-50/50 text-gray-300 cursor-not-allowed'
-                                          : isActive
-                                          ? 'bg-emerald-600 text-white font-bold z-10'
-                                          : 'bg-white hover:bg-emerald-50 hover:text-emerald-600 cursor-pointer'}
-                                      `}
-                                    >
-                                      <span className={`text-[13px] tracking-tight transition-colors ${slot.da_dat ? 'line-through opacity-40' : ''}`}>
-                                        {formatTime(slot.gio_bat_dau)}
-                                      </span>
-                                      
-                                      {slot.phu_phi > 0 && !slot.da_dat && (
-                                        <span className={`absolute bottom-1 right-1.5 text-[8px] font-bold transition-colors 
-                                          ${isActive ? 'text-emerald-100' : 'text-amber-600'}
-                                        `}>
-                                          +{(slot.phu_phi/1000)}k
-                                        </span>
-                                      )}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-400 text-center py-8 text-sm">Rất tiếc, sân này đã hết khung giờ trong ngày được chọn.</p>
-                      )}
-                    </div>
-                  )}
+            {/* 3. TIME SLOT SECTION */}
+            <div className={`bg-white border border-gray-200 rounded-lg overflow-hidden ${!selectedSubCourt ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-emerald-600" />
+                  <h2 className="text-sm font-bold text-gray-800">Chọn giờ bắt đầu</h2>
                 </div>
-              );
-            })}
+                {selectedSlots.length > 0 && (
+                  <div className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
+                    Đã chọn {selectedSlots.length} khung giờ
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-6">
+                {!selectedSubCourt ? (
+                  <div className="py-10 text-center opacity-40">
+                    <Clock className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm">Vui lòng chọn bước 1 & 2 trước</p>
+                  </div>
+                ) : currentSlots.length > 0 ? (
+                  <div className="space-y-8">
+                    {[
+                      { id: 'morning', label: 'Sáng', range: '06:00 - 11:30', icon: Sun, slots: groupedSlots.morning, color: 'text-amber-600' },
+                      { id: 'afternoon', label: 'Chiều', range: '12:00 - 17:30', icon: CloudSun, slots: groupedSlots.afternoon, color: 'text-orange-500' },
+                      { id: 'evening', label: 'Tối', range: '18:00 - 22:00', icon: Moon, slots: groupedSlots.evening, color: 'text-blue-600' },
+                    ].map((group) => group.slots.length > 0 && (
+                      <div key={group.id} className="space-y-3">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-gray-100 border text-gray-700">
+                          <group.icon className={`w-3.5 h-3.5 ${group.color}`} />
+                          <span className="text-xs font-bold text-gray-700">{group.label}</span>
+                          <span className="text-[10px] text-gray-400 font-medium ml-auto">Khung giờ {group.range}</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 border-t border-l border-gray-100">
+                          {group.slots.map((slot: TimeSlot) => {
+                            const isActive = selectedSlots.includes(slot.ma_khung_gio);
+                            return (
+                              <button
+                                key={slot.ma_khung_gio}
+                                onClick={() => !slot.da_dat && handleSlotToggle(slot.ma_khung_gio)}
+                                disabled={slot.da_dat}
+                                className={`
+                                  relative h-12 border-r border-b border-gray-100 flex flex-col items-center justify-center transition-all group
+                                  ${slot.da_dat
+                                    ? 'bg-gray-50/50 text-gray-300 cursor-not-allowed'
+                                    : isActive
+                                    ? 'bg-emerald-600 text-white font-bold z-10'
+                                    : 'bg-white hover:bg-emerald-50 hover:text-emerald-600 cursor-pointer'}
+                                `}
+                              >
+                                <span className={`text-[13px] tracking-tight transition-colors ${slot.da_dat ? 'line-through opacity-40' : ''}`}>
+                                  {formatTime(slot.gio_bat_dau)}
+                                </span>
+                                
+                                {slot.phu_phi > 0 && !slot.da_dat && (
+                                  <span className={`absolute bottom-1 right-1.5 text-[8px] font-bold transition-colors 
+                                    ${isActive ? 'text-emerald-100' : 'text-amber-600'}
+                                  `}>
+                                    +{(slot.phu_phi/1000)}k
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-center py-8 text-sm">Rất tiếc, sân này đã hết khung giờ trong ngày được chọn.</p>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Checkout Column */}
@@ -530,7 +410,7 @@ export default function BookingPage() {
               </div>
               
               <div className="p-6 space-y-5">
-                {/* Court Info */}
+                {/* Details */}
                 <div className="space-y-3 pb-5 border-b border-gray-100">
                   <div className="flex justify-between items-center text-[13px]">
                     <div className="flex items-center gap-2 text-gray-400">
@@ -545,53 +425,38 @@ export default function BookingPage() {
                       <span>Ngày chơi</span>
                     </div>
                     <span className="text-gray-900 font-bold text-right ml-4 capitalize">
-                      {new Date(selectedDate).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' })}
+                      {(() => {
+                        const [y, m, d] = selectedDate.split('-').map(Number);
+                        return new Date(y, m - 1, d).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
+                      })()}
                     </span>
                   </div>
-                </div>
-
-                {/* Selected Sub-courts List */}
-                {selections.length > 0 && (
-                  <div className="space-y-3 pb-5 border-b border-gray-100">
-                    <div className="flex items-center gap-2 mb-3">
-                      <MapPin className="w-4 h-4 text-emerald-600" />
-                      <span className="text-xs font-bold text-gray-700">
-                        Đã chọn {selections.length} sân
-                      </span>
+                  <div className="flex justify-between items-center text-[13px]">
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Khu vực</span>
                     </div>
-                    
-                    {selections.map((selection) => (
-                      <div key={selection.ma_san_con} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-gray-900">
-                            📍 {selection.ten_san_con}
-                          </span>
-                          <button
-                            onClick={() => removeSubCourt(selection.ma_san_con)}
-                            className="text-red-500 hover:text-red-700 transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                        
-                        {/* Slots list */}
-                        <div className="space-y-1">
-                          {selection.selected_slots.map((slot) => (
-                            <div key={slot.ma_khung_gio} className="flex justify-between text-xs">
-                              <span className="text-gray-600">
-                                • {formatTime(slot.gio_bat_dau)} - {formatTime(slot.gio_ket_thuc)}
-                              </span>
-                              <span className="font-bold text-gray-900">
-                                {formatCurrency(slot.gia)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                    <span className="text-gray-900 font-bold text-right ml-4">{currentSubCourt?.ten_san_con || 'Chưa chọn'}</span>
                   </div>
-                )}
+                  {selectedSlots.length > 0 && (
+                    <div className="pt-3 border-t border-gray-50">
+                       <div className="flex items-center gap-2 text-gray-500 text-[11px] font-semibold mb-2.5">
+                          <Clock className="w-3 h-3" />
+                          <span>Khung giờ đã chọn</span>
+                       </div>
+                       <div className="grid grid-cols-2 gap-1.5">
+                          {selectedSlots.map(id => {
+                            const slot = currentSlots.find(s => s.ma_khung_gio === id);
+                            return slot ? (
+                              <div key={id} className="bg-gray-50 border border-gray-100 px-2 py-1.5 text-[10px] font-bold text-gray-700 flex justify-between items-center">
+                                <span>{formatTime(slot.gio_bat_dau)} - {formatTime(slot.gio_ket_thuc)}</span>
+                              </div>
+                            ) : null;
+                          })}
+                       </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Payment Selection */}
                 <div className="space-y-3">
@@ -643,10 +508,8 @@ export default function BookingPage() {
                 {/* Final Price Block */}
                 <div className="pt-6 border-t-2 border-dashed border-gray-100 space-y-4">
                   <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-xs text-gray-500 font-semibold">
-                      Tổng cộng ({totalSlotsCount} khung giờ)
-                    </span>
-                    <span className="text-2xl font-bold text-gray-900 tracking-tight">{formatCurrency(totalPrice)}</span>
+                    <span className="text-xs text-gray-500 font-semibold">Tổng cộng</span>
+                    <span className="text-2xl font-bold text-gray-900 tracking-tight">{formatCurrency(calculateTotal())}</span>
                   </div>
 
                   {paymentMethod === 'chuyen_khoan' && (
@@ -661,10 +524,10 @@ export default function BookingPage() {
 
                   <button
                     onClick={handleSubmit}
-                    disabled={!isValid || createBookingMutation.isPending}
+                    disabled={!selectedSubCourt || !selectedSlots.length || createBookingMutation.isPending}
                     className={`
                       w-full py-4 rounded-lg font-bold text-sm transition-all
-                      ${!isValid
+                      ${!selectedSubCourt || !selectedSlots.length 
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' 
                         : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.99] border border-emerald-600'}
                     `}

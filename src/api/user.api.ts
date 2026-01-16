@@ -2,9 +2,9 @@ import api from './axios';
 import type { User, UpdateProfileRequest, ChangePasswordRequest } from '@/types';
 
 export const userApi = {
-  getProfile: async (): Promise<User> => {
+  getProfile: async (): Promise<User | null> => {
     const response = await api.get('/api/users/profile');
-    return response.data;
+    return response.data?.user ?? null;
   },
 
   updateProfile: async (data: UpdateProfileRequest): Promise<User> => {
@@ -13,7 +13,7 @@ export const userApi = {
   },
 
   changePassword: async (data: ChangePasswordRequest): Promise<{ message: string }> => {
-    const response = await api.put('/api/users/change-password', data);
+    const response = await api.put('/api/users/change-password', { oldPassword: data.mat_khau_cu, newPassword: data.mat_khau_moi });
     return response.data;
   },
 

@@ -17,6 +17,7 @@ const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
 const PaymentResultPage = lazy(() => import('@/features/payment/pages/PaymentResultPage'));
+const AboutPage = lazy(() => import('@/pages/AboutPage'));
 
 const AdminDashboard = lazy(() => import("@/admin/src/pages/admin/Dashboard"));
 const AdminSports = lazy(() => import("@/admin/src/pages/admin/Sports"));
@@ -29,6 +30,7 @@ const CourtForm = lazy(() => import("@/admin/src/pages/owner/CourtForm"));
 const CourtDetail = lazy(() => import("@/admin/src/pages/owner/CourtDetail"));
 const BookingDetail = lazy(() => import("@/admin/src/pages/owner/BookingDetail"));
 const PaymentResult = lazy(() => import("@/admin/src/pages/owner/PaymentResult"));
+const AuthSuccess = lazy(() => import("@/admin/src/pages/AuthSuccess"));
 
 export const router = createBrowserRouter([
   {
@@ -47,6 +49,10 @@ export const router = createBrowserRouter([
       {
         path: 'courts/:id',
         element: <LazyWrapper><CourtDetailPage /></LazyWrapper>,
+      },
+      {
+        path: 'about',
+        element: <LazyWrapper><AboutPage /></LazyWrapper>,
       },
 
       // Auth routes (public only)
@@ -98,31 +104,35 @@ export const router = createBrowserRouter([
           },
         ],
       },
-        // ########
-        {
-          path: "admin",
-          element: <PrivateRoute role="admin" />,
-          children: [
-            { index: true, element: <AdminDashboard /> },
-            { path: "users", element: <AdminUsers /> },
-            { path: "configs/time-slots", element: <AdminTimeSlots /> },
-            { path: "sports", element: <AdminSports /> },
-          ],
-        },
-        {
-          path: "owner",
-          element: <PrivateRoute role="chu_san" />,
-          children: [
-            { index: true, element: <OwnerDashboard /> },
-            { path: "courts/my", element: <OwerMyCourts /> },
-            { path: "courts/new", element: <CourtForm /> },
-            { path: "courts/edit/:id", element: <CourtForm /> },
-            { path: "courts/:id", element: <CourtDetail /> },
-            { path: "orders/count", element: <OwnerBookings /> },
-            { path: "dat-san/:id", element: <BookingDetail /> },
-            { path: "payment/result", element: <PaymentResult /> },
-          ],
-        },
+      // ########
+      {
+        path: "admin",
+        element: <PrivateRoute role="admin" />,
+        children: [
+          { index: true, element: <AdminDashboard /> },
+          { path: "users", element: <AdminUsers /> },
+          { path: "configs/time-slots", element: <AdminTimeSlots /> },
+          { path: "sports", element: <AdminSports /> },
+        ],
+      },
+      {
+        path: "owner",
+        element: <PrivateRoute role="chu_san" />,
+        children: [
+          { index: true, element: <OwnerDashboard /> },
+          { path: "courts/my", element: <OwerMyCourts /> },
+          { path: "courts/new", element: <CourtForm /> },
+          { path: "courts/edit/:id", element: <CourtForm /> },
+          { path: "courts/:id", element: <CourtDetail /> },
+          { path: "orders/count", element: <OwnerBookings /> },
+          { path: "dat-san/:id", element: <BookingDetail /> },
+          { path: "payment/result", element: <PaymentResult /> },
+        ],
+      },
+      {
+        path: "auth/success",
+        element: <AuthSuccess />
+      }
     ],
   },
 ]);

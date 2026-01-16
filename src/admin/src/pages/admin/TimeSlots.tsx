@@ -8,7 +8,7 @@ export default function TimeSlotsAdmin() {
   const [holidays, setHolidays] = useState([]);
   const [weekSurcharges, setWeekSurcharges] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modal state for adding holiday
   const [showHolidayModal, setShowHolidayModal] = useState(false);
   const [newHoliday, setNewHoliday] = useState({
@@ -25,13 +25,14 @@ export default function TimeSlotsAdmin() {
         api.get("/configs/holidays"),
         api.get("/configs/week-surcharges"),
       ]);
-      
+
+      console.log({ holRes })
       // Sort slots by ID
       const sortedSlots = (slotsRes.data.data || []).sort((a, b) => a.ma_khung_gio - b.ma_khung_gio);
       setSlots(sortedSlots);
-      
+
       setHolidays(holRes.data.data || []);
-      
+
       // Sort week surcharges: 1-6 (Mon-Sat), then 0 (Sun)
       const sortedWeek = (weekRes.data.data || []).sort((a, b) => {
         const dayA = a.ngay_trong_tuan === 0 ? 7 : a.ngay_trong_tuan;
@@ -55,7 +56,7 @@ export default function TimeSlotsAdmin() {
       alert("Cập nhật thành công");
       await loadAll();
     } catch (e) {
-        console.error(e);
+      console.error(e);
       alert("Lỗi khi cập nhật khung giờ");
     }
   }
@@ -76,8 +77,8 @@ export default function TimeSlotsAdmin() {
       setShowHolidayModal(false);
       await loadAll();
     } catch (e) {
-        console.error(e);
-      alert("Lỗi khi thêm ngày nghỉ");
+      console.error(e);
+      alert("Lỗi khi thêm ngày lễ");
     }
   }
 
@@ -87,11 +88,11 @@ export default function TimeSlotsAdmin() {
       alert("Cập nhật phụ phí tuần thành công");
       await loadAll();
     } catch (e) {
-        console.error(e);
+      console.error(e);
       alert("Lỗi khi cập nhật phụ phí");
     }
   }
-  
+
   function getDayName(day) {
     const days = {
       1: "Thứ 2",
@@ -108,7 +109,7 @@ export default function TimeSlotsAdmin() {
   return (
     <AdminLayout>
       <div className="container-fluid py-4">
-        <h5>Quản lý khung giờ / ngày nghỉ / phụ phí tuần</h5>
+        <h5>Quản lý khung giờ / ngày lễ / phụ phí tuần</h5>
         {loading && <div>Loading...</div>}
 
         <div className="card mb-3">
@@ -119,7 +120,7 @@ export default function TimeSlotsAdmin() {
           <div className="card-body">
             <div className="table-responsive">
               <table className="table">
-                <thead><tr><th>ID</th><th>Bắt đầu</th><th>Kết thúc</th><th>Phụ phí</th></tr></thead>
+                <thead><tr><th>ID</th><th>Bắt đầu</th><th>Kết thúc</th><th>Phụ phí</th><th className="text-center">Đơn vị</th></tr></thead>
                 <tbody>
                   {slots.map((s, idx) => (
                     <tr key={s.ma_khung_gio}>
@@ -139,6 +140,9 @@ export default function TimeSlotsAdmin() {
                           const ns = [...slots]; ns[idx] = { ...s, phu_phi: e.target.value }; setSlots(ns);
                         }} />
                       </td>
+                      <td className="text-center">
+                        <span className="text-center bg-green-600 text-white inline-block px-2 py-[0.25em] rounded text-[0.9rem]">VNĐ</span>
+                      </td>
                     </tr>
                   ))}
                   {slots.length === 0 && <tr><td colSpan="4">Không có khung giờ</td></tr>}
@@ -152,20 +156,21 @@ export default function TimeSlotsAdmin() {
           <div className="col-md-6">
             <div className="card mb-3">
               <div className="card-header d-flex justify-content-between">
-                <h6 className="mb-0">Danh sách ngày nghỉ</h6>
-                <button className="btn btn-sm btn-success" onClick={openHolidayModal}>Thêm ngày nghỉ</button>
+                <h6 className="mb-0">Danh sách ngày lễ</h6>
+                <button className="btn btn-sm btn-success" onClick={openHolidayModal}>Thêm ngày lễ</button>
               </div>
               <div className="card-body">
-                <ul className="list-group">
+                <ul className="list-group max-h-[26.3em] overflow-y-auto">
                   {holidays.map(h => (
                     <li key={h.ma_ngay_le} className="list-group-item d-flex justify-content-between">
                       <div>
                         <strong>{h.ma_ngay_le}</strong> - {h.ten_ngay_le}
                       </div>
-                      <div>{h.phi_ngay_le}</div>
+                      {/* <div>{h.phi_ngay_le}</div> */}
+                      <div>{Number(h.phi_ngay_le ?? 0).toLocaleString('vi-VN')} VNĐ</div>
                     </li>
                   ))}
-                  {holidays.length === 0 && <li className="list-group-item">Không có ngày nghỉ</li>}
+                  {holidays.length === 0 && <li className="list-group-item">Không có ngày lễ</li>}
                 </ul>
               </div>
             </div>
@@ -179,7 +184,9 @@ export default function TimeSlotsAdmin() {
               </div>
               <div className="card-body">
                 <table className="table">
-                  <thead><tr><th>Ngày</th><th>Phí</th></tr></thead>
+                  <thead><tr><th>Ngày</th><th>Phí</th>
+                    <th className="text-center">Đơn vị</th></tr>
+                  </thead>
                   <tbody>
                     {weekSurcharges.map((w, i) => (
                       <tr key={`week-${w.ngay_trong_tuan}-${i}`}>
@@ -189,6 +196,9 @@ export default function TimeSlotsAdmin() {
                             onChange={(e) => {
                               const ns = [...weekSurcharges]; ns[i] = { ...w, phi_thu: e.target.value }; setWeekSurcharges(ns);
                             }} />
+                        </td>
+                        <td className="text-center">
+                          <span className="text-center bg-green-600 text-white inline-block px-2 py-[0.25em] rounded text-[0.9rem]">VNĐ</span>
                         </td>
                       </tr>
                     ))}
@@ -206,36 +216,36 @@ export default function TimeSlotsAdmin() {
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Thêm ngày nghỉ</h5>
+                  <h5 className="modal-title">Thêm ngày lễ</h5>
                   <button type="button" className="btn-close" onClick={() => setShowHolidayModal(false)}></button>
                 </div>
                 <div className="modal-body">
                   <div className="mb-3">
                     <label className="form-label">Ngày (YYYY-MM-DD)</label>
-                    <input 
-                      type="date" 
-                      className="form-control" 
+                    <input
+                      type="date"
+                      className="form-control"
                       value={newHoliday.ma_ngay_le}
-                      onChange={(e) => setNewHoliday({...newHoliday, ma_ngay_le: e.target.value})}
+                      onChange={(e) => setNewHoliday({ ...newHoliday, ma_ngay_le: e.target.value })}
                     />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Tên ngày lễ</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
+                    <input
+                      type="text"
+                      className="form-control"
                       value={newHoliday.ten_ngay_le}
-                      onChange={(e) => setNewHoliday({...newHoliday, ten_ngay_le: e.target.value})}
+                      onChange={(e) => setNewHoliday({ ...newHoliday, ten_ngay_le: e.target.value })}
                       placeholder="Ví dụ: Tết Nguyên Đán"
                     />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Phụ phí (VNĐ)</label>
-                    <input 
-                      type="number" 
-                      className="form-control" 
+                    <input
+                      type="number"
+                      className="form-control"
                       value={newHoliday.phi_ngay_le}
-                      onChange={(e) => setNewHoliday({...newHoliday, phi_ngay_le: e.target.value})}
+                      onChange={(e) => setNewHoliday({ ...newHoliday, phi_ngay_le: e.target.value })}
                       placeholder="0"
                     />
                   </div>

@@ -8,6 +8,28 @@ import { useAuthStore } from '@/stores/auth.store';
 import type { SubCourt } from '@/types';
 import { MapPin, Dribbble, Frown, ChevronRight, CreditCard } from 'lucide-react';
 
+// Map by sport ID (ma_bo_mon)
+const SPORT_DESCRIPTIONS_BY_ID: Record<number, string> = {
+  1: 'Sân cỏ nhân tạo chất lượng cao, kích thước phổ biến 20x40m sân 5 người, thoát nước tốt, đèn LED sáng đầy đủ. Giờ mở thường 6h-22h. Tiện ích: đỗ xe rộng, nước uống, nhà vệ sinh.',
+  2: 'Sân chuẩn FIBA 28x15m, mặt sàn bê tông/nhựa hoặc gỗ trong nhà, rổ và vạch rõ nét. Giờ mở thường 6h-22h. Tiện ích: thoáng mát, đông cộng đồng.',
+  3: 'Sân trong nhà, sàn thảm/gỗ chuẩn thi đấu, 4-6 sân/club, chiếu sáng tốt, lưới chắc chắn. Giờ mở thường 6h-22h. Tiện ích: cộng đồng đông, giá rẻ, dễ chơi.',
+  4: 'Sân cứng hoặc đất nện chuẩn ITF (23.77x8.23m đơn, 23.77x10.97m đôi), đèn LED, mái che một phần. Giờ mở thường 6h-22h. Tiện ích: chất lượng cao, view đẹp, đa năng với pickleball.',
+  5: '6-10 bàn/club chuẩn thi đấu ITTF, sàn gỗ/thảm, vợt/bóng sẵn có. Giờ mở chủ yếu sáng-tối 6h-22h. Tiện ích: cộng đồng cao thủ mạnh, giá rẻ, phù hợp luyện tập lâu dài.',
+  6: 'Sân cứng chuẩn 13.4x6.1m (mỗi bên lưới), mái che tốt, vợt/bóng cho thuê. Giờ mở thường 6h-22h. Tiện ích: hiện đại, đông người chơi mọi lứa tuổi, kết hợp tennis, cộng đồng thân thiện.',
+  7: 'Sân chuẩn 18x9m, trong nhà hoặc ngoài trời đa năng, sàn gỗ/bê tông, lưới chắc chắn. Giờ mở thường 6h-22h. Tiện ích: phù hợp đội nhóm, khán đài nhỏ, kết hợp các môn khác.',
+};
+
+// Map by sport name (ten_bo_mon) - fallback
+const SPORT_DESCRIPTIONS_BY_NAME: Record<string, string> = {
+  'Đá bóng': SPORT_DESCRIPTIONS_BY_ID[1],
+  'Bóng rổ': SPORT_DESCRIPTIONS_BY_ID[2],
+  'Cầu lông': SPORT_DESCRIPTIONS_BY_ID[3],
+  'Tennis': SPORT_DESCRIPTIONS_BY_ID[4],
+  'Bóng bàn': SPORT_DESCRIPTIONS_BY_ID[5],
+  'Pickleball': SPORT_DESCRIPTIONS_BY_ID[6],
+  'Bóng chuyền': SPORT_DESCRIPTIONS_BY_ID[7],
+};
+
 export default function CourtDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -16,7 +38,16 @@ export default function CourtDetailPage() {
 
   const { data: court, isLoading } = useQuery({
     queryKey: ['court', id],
-    queryFn: () => courtsApi.getById(Number(id)),
+    queryFn: async () => {
+      const data = await courtsApi.getById(Number(id));
+      // console.log('🏟️ Court data:', {
+      //   ten_san: data.ten_san,
+      //   ma_bo_mon: data.ma_bo_mon,
+      //   bo_mon: data.bo_mon,
+      //   mo_ta: data.mo_ta,
+      // });
+      return data;
+    },
     enabled: !!id,
   });
 
@@ -57,7 +88,9 @@ export default function CourtDetailPage() {
           </Link>
         </div>
       </div>
+      
     );
+    
   }
 
   return (
@@ -128,7 +161,15 @@ export default function CourtDetailPage() {
                 <h2 className="text-sm font-bold text-gray-800">Mô tả chi tiết</h2>
               </div>
               <div className="p-6">
-                <p className="text-base text-gray-600 leading-relaxed font-normal">{court.mo_ta || 'Chưa có thông tin mô tả cụ thể cho sân này.'}</p>
+                <p className="text-base text-gray-600 leading-relaxed font-normal">
+                  {court.mo_ta?.trim()
+                    ? court.mo_ta.trim()
+                    : court.ma_bo_mon 
+                      ? SPORT_DESCRIPTIONS_BY_ID[court.ma_bo_mon] || 'Chưa có thông tin mô tả cụ thể cho sân này.'
+                      : court.bo_mon?.ten_bo_mon
+                        ? SPORT_DESCRIPTIONS_BY_NAME[court.bo_mon.ten_bo_mon.trim()] || 'Chưa có thông tin mô tả cụ thể cho sân này.'
+                        : 'Chưa có thông tin mô tả cụ thể cho sân này. Sân đạt tiêu chuẩn chất lượng tốt, phù hợp cho các buổi tập và thi đấu.'}
+                </p>
               </div>
             </div>
 

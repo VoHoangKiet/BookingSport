@@ -65,7 +65,7 @@ export default function OwnerDashboard() {
     <OwnerLayout>
       <div className="container-fluid py-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5>Owner Dashboard</h5>
+          <h5>Bảng Điều Khiển</h5>
           <div className="d-flex gap-2">
             <select
               className="form-select w-auto"
@@ -160,7 +160,7 @@ export default function OwnerDashboard() {
                       </div>
                       <div>
                         <p className="mb-0 text-sm">Doanh thu</p>
-                        <h4>{overview.totals?.revenue ?? 0} VNĐ</h4>
+                        <h4>{Number(overview.totals?.revenue ?? 0).toLocaleString('vi-VN')} VNĐ</h4>
                       </div>
                     </div>
                   </div>
