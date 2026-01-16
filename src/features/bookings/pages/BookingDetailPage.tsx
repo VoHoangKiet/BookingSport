@@ -117,7 +117,7 @@ export default function BookingDetailPage() {
 
   const canCancel = booking.trang_thai === 'tam_giu' || booking.trang_thai === 'da_dat_coc';
   const canPay = booking.trang_thai === 'tam_giu';
-  const canPayRemaining = booking.trang_thai === 'da_coc' && (booking.tong_tien - (booking.da_thanh_toan || 0)) > 0;
+  const canPayRemaining = booking.trang_thai === 'da_dat_coc' && (booking.tong_tien - (booking.da_thanh_toan || 0)) > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
